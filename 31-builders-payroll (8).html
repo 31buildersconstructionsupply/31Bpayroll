@@ -1,0 +1,4031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>31 Builders – Payroll</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+// ── Load Firebase SDKs dynamically with a timeout fallback ──
+(function() {
+  var FIREBASE_SDKS = [
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js'
+  ];
+
+  var loaded = 0;
+  var failed = false;
+
+  function onAllLoaded() {
+    // Signal that Firebase is ready — app init listens for this
+    window._firebaseReady = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  }
+
+  function onError(src) {
+    if (failed) return;
+    failed = true;
+    // Defer until DOM is fully parsed (this script runs in <head>)
+    function showFirebaseError() {
+      var loading  = document.getElementById('app-loading');
+      var loginScr = document.getElementById('login-screen');
+      var loginErr = document.getElementById('login-err');
+      if (!loading || !loginScr || !loginErr) { setTimeout(showFirebaseError, 100); return; }
+      loading.style.display  = 'none';
+      loginScr.style.display = 'flex';
+      loginErr.textContent   = '⚠️ Could not load Firebase. Check your internet connection and reload the page.';
+      loginErr.style.display = 'block';
+    }
+    showFirebaseError();
+  }
+
+  FIREBASE_SDKS.forEach(function(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = function() {
+      loaded++;
+      if (loaded === FIREBASE_SDKS.length) onAllLoaded();
+    };
+    s.onerror = function() { onError(src); };
+    document.head.appendChild(s);
+  });
+
+  // Hard timeout: if Firebase hasn't loaded in 10 seconds, show error
+  setTimeout(function() {
+    if (!window._firebaseReady) onError('timeout');
+  }, 10000);
+})();
+</script>
+<style>
+/* ════════════════════════════════════════════════
+   31 BUILDERS PAYROLL — Professional Office Theme
+   Font stack: Inter (UI) + JetBrains Mono (data)
+   Inspired by: Linear, Notion, Stripe Dashboard
+   ════════════════════════════════════════════════ */
+:root {
+  /* Surface palette — refined dark slate */
+  --bg:        #0f1117;
+  --surface:   #161b27;
+  --surface2:  #1c2235;
+  --surface3:  #212840;
+  --border:    #2a3149;
+  --border2:   #323d5c;
+
+  /* Brand */
+  --gold:      #e8a917;
+  --gold2:     #c48f10;
+  --gold-dim:  rgba(232,169,23,.12);
+
+  /* Semantic */
+  --blue:      #4b7cf3;
+  --blue-dim:  rgba(75,124,243,.13);
+  --green:     #22c55e;
+  --green-dim: rgba(34,197,94,.12);
+  --red:       #ef4444;
+  --red-dim:   rgba(239,68,68,.11);
+  --orange:    #f97316;
+  --purple:    #8b5cf6;
+
+  /* Typography */
+  --text:      #e2e8f5;
+  --text2:     #a8b4cc;
+  --muted:     #64748b;
+
+  /* Layout */
+  --r:         12px;
+  --r-sm:      8px;
+  --r-lg:      16px;
+  --shadow:    0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.2);
+
+  /* Fonts */
+  --fh: 'Inter', system-ui, -apple-system, sans-serif;
+  --fm: 'JetBrains Mono', 'Menlo', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fh);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Topbar ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 56px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--shadow);
+}
+.logo {
+  width: 36px; height: 36px;
+  background: var(--gold);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-weight: 800; font-size: 15px;
+  color: #0f1117; flex-shrink: 0;
+  letter-spacing: -.5px;
+}
+.topbar-info { flex: 1; }
+.topbar-title {
+  font-family: var(--fh); font-weight: 700;
+  font-size: 16px; line-height: 1; letter-spacing: -.3px;
+}
+.topbar-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+
+.period-chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 5px 11px;
+  font-size: 11px; font-weight: 600; font-family: var(--fh);
+  color: var(--gold); cursor: pointer;
+  white-space: nowrap; display: flex; align-items: center; gap: 5px;
+  transition: border-color .15s;
+}
+.period-chip:hover { border-color: var(--gold); }
+
+/* ── Branch bar ── */
+.branch-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.branch-bar::-webkit-scrollbar { display: none; }
+.branch-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 5px 13px;
+  font-family: var(--fh); font-size: 13px; font-weight: 600;
+  color: var(--text2); cursor: pointer; white-space: nowrap;
+  transition: all .15s; flex-shrink: 0;
+}
+.branch-pill:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+.branch-pill.active {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.branch-pill.active::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold); flex-shrink: 0;
+}
+.branch-pill-add {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: var(--r-sm);
+  background: transparent; border: 1px dashed var(--border);
+  color: var(--muted); font-size: 17px; cursor: pointer;
+  transition: all .15s; flex-shrink: 0;
+}
+.branch-pill-add:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+/* ── Nav tabs ── */
+.nav-tabs {
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+  padding: 0 8px;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tab {
+  flex: 1; min-width: 76px;
+  padding: 12px 6px 11px;
+  text-align: center;
+  font-family: var(--fh); font-size: 12px; font-weight: 600;
+  color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .15s; white-space: nowrap;
+  letter-spacing: .01em;
+}
+.nav-tab:hover { color: var(--text2); }
+.nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ── Pages ── */
+.page { display: none; padding: 20px; animation: pageIn .2s ease; padding-bottom: 48px; }
+.page.active { display: block; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Section headers ── */
+.sec-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.sec-title { font-family: var(--fh); font-weight: 700; font-size: 16px; letter-spacing: -.2px; }
+.sec-sub { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 400; }
+
+/* ── Cards ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+.card + .card { margin-top: 8px; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wide { grid-column: 1 / -1; }
+
+/* ── Stat cards ── */
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 14px;
+}
+.stat-label {
+  font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .08em;
+  font-weight: 600; margin-bottom: 8px;
+}
+.stat-val { font-family: var(--fh); font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+.c-gold { color: var(--gold); } .c-green { color: var(--green); }
+.c-red { color: var(--red); } .c-blue { color: var(--blue); } .c-muted { color: var(--muted); }
+
+/* ── Buttons ── */
+.btn { border: none; border-radius: var(--r-sm); cursor: pointer; font-family: var(--fh); font-weight: 600; transition: all .15s; }
+.btn:active { opacity: .85; transform: scale(.98); }
+.btn-gold { background: var(--gold); color: #0f1117; padding: 8px 16px; font-size: 13px; font-weight: 700; }
+.btn-gold:hover { background: #d49b14; }
+.btn-blue { background: var(--blue); color: #fff; padding: 8px 14px; font-size: 13px; }
+.btn-blue:hover { background: #3a6be0; }
+.btn-ghost {
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); padding: 7px 13px;
+  font-size: 12px; font-weight: 500;
+}
+.btn-ghost:hover { border-color: var(--border2); }
+.btn-sm {
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 5px 11px; font-family: var(--fh); font-size: 12px;
+  font-weight: 500; cursor: pointer;
+}
+.btn-full {
+  width: 100%; background: var(--gold); color: #0f1117;
+  border: none; border-radius: var(--r-sm); padding: 13px;
+  font-family: var(--fh); font-weight: 700; font-size: 14px;
+  cursor: pointer; margin-top: 14px; transition: background .15s;
+  letter-spacing: .01em;
+}
+.btn-full:hover { background: #d49b14; }
+.btn-full-red { background: var(--red); color: #fff; }
+.btn-full-red:hover { background: #dc3030; }
+.btn-cancel {
+  width: 100%; background: transparent; color: var(--text2);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 11px; font-family: var(--fh); font-weight: 600;
+  font-size: 13px; cursor: pointer; margin-top: 8px;
+  transition: border-color .15s;
+}
+.btn-cancel:hover { border-color: var(--border2); }
+.btn-icon {
+  width: 32px; height: 32px; border-radius: var(--r-sm);
+  border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 14px; flex-shrink: 0; transition: all .15s;
+}
+.btn-icon:active { transform: scale(.88); }
+.bi-edit { background: var(--blue-dim); color: var(--blue); }
+.bi-edit:hover { background: rgba(75,124,243,.22); }
+.bi-del { background: var(--red-dim); color: var(--red); }
+.bi-del:hover { background: rgba(239,68,68,.2); }
+.bi-restore { background: var(--green-dim); color: var(--green); }
+.bi-restore:hover { background: rgba(34,197,94,.2); }
+
+/* ── Search ── */
+.search-wrap { position: relative; margin-bottom: 12px; }
+.search-input {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 9px 13px 9px 38px; color: var(--text);
+  font-family: var(--fh); font-size: 13px; font-weight: 400;
+  outline: none; transition: border-color .15s;
+}
+.search-input:focus { border-color: var(--gold); }
+.search-input::placeholder { color: var(--muted); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 15px; pointer-events: none; }
+.roster-meta { font-size: 11px; color: var(--muted); margin-bottom: 12px; font-weight: 500; }
+
+/* ── Directory rows ── */
+.dir-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 6px; overflow: hidden;
+  transition: border-color .15s;
+}
+.dir-row:hover { border-color: var(--border2); }
+.dir-row.dimmed { opacity: .4; }
+.dir-main { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+.dir-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.dir-info { flex: 1; min-width: 0; }
+.dir-name { font-family: var(--fh); font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.1px; }
+.dir-pos { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+.dir-rate { font-size: 12px; margin-top: 3px; font-weight: 500; }
+.dir-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.pos-badge {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 20px; font-size: 10px; font-weight: 600;
+  font-family: var(--fh); text-transform: uppercase; letter-spacing: .04em;
+}
+.pill-active { background: var(--green-dim); color: var(--green); }
+.pill-inactive { background: rgba(100,116,139,.13); color: var(--muted); }
+
+/* ── Wage rows ── */
+.wage-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 6px; overflow: hidden;
+  transition: border-color .15s;
+}
+.wage-row:hover { border-color: var(--border2); }
+.wage-main { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; }
+.wage-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-weight: 700; font-size: 12px; flex-shrink: 0;
+}
+.wage-info { flex: 1; min-width: 0; }
+.wage-name { font-family: var(--fh); font-weight: 600; font-size: 14px; letter-spacing: -.1px; }
+.wage-meta { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+.wage-net { text-align: right; }
+.wage-net-val { font-family: var(--fh); font-weight: 700; font-size: 15px; color: var(--green); letter-spacing: -.3px; }
+.wage-net-lbl { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.wage-detail { border-top: 1px solid var(--border); padding: 14px; display: none; background: var(--surface2); }
+.wage-detail.open { display: block; }
+.wd-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.wd-row:last-child { border-bottom: none; }
+.wd-row label { color: var(--text2); font-weight: 400; }
+.wd-section {
+  font-family: var(--fh); font-size: 10px; font-weight: 700;
+  color: var(--gold); text-transform: uppercase; letter-spacing: .1em;
+  padding: 10px 0 4px;
+}
+.wd-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn-edit-blue {
+  flex: 1; background: var(--blue); color: #fff; border: none;
+  border-radius: var(--r-sm); padding: 9px;
+  font-family: var(--fh); font-weight: 600; font-size: 13px; cursor: pointer;
+  transition: background .15s;
+}
+.btn-edit-blue:hover { background: #3a6be0; }
+
+/* ── Add wage hint ── */
+.add-wage-hint {
+  background: var(--gold-dim); border: 1px dashed var(--gold2);
+  border-radius: var(--r); padding: 14px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 6px; cursor: pointer; transition: background .15s;
+}
+.add-wage-hint:hover { background: rgba(232,169,23,.18); }
+.add-wage-hint-text { font-size: 12px; color: var(--muted); }
+.add-wage-hint-name { font-family: var(--fh); font-weight: 600; color: var(--text); font-size: 13px; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(8,10,18,.85); backdrop-filter: blur(8px);
+  display: flex; align-items: flex-end; animation: ovIn .18s;
+}
+@keyframes ovIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-top: 1px solid var(--border2);
+  border-radius: 18px 18px 0 0; width: 100%;
+  max-height: 92vh; overflow-y: auto;
+  padding: 20px 20px 40px; animation: modalUp .22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes modalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border2); margin: 0 auto 20px; }
+.modal-title { font-family: var(--fh); font-size: 17px; font-weight: 700; margin-bottom: 4px; letter-spacing: -.2px; }
+.modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; font-weight: 400; }
+
+/* ── Form fields ── */
+.fg { margin-bottom: 14px; }
+.fl { font-size: 11px; color: var(--text2); font-weight: 600; letter-spacing: .02em; margin-bottom: 6px; display: block; }
+.fi {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 10px 13px; color: var(--text);
+  font-family: var(--fh); font-size: 14px; font-weight: 400;
+  outline: none; transition: border-color .15s;
+}
+.fi:focus { border-color: var(--gold); background: var(--surface3); }
+.fi::placeholder { color: var(--muted); }
+select.fi { appearance: none; }
+.fg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fsec {
+  font-family: var(--fh); font-size: 10px; font-weight: 700;
+  color: var(--gold); text-transform: uppercase; letter-spacing: .1em;
+  padding: 12px 0 6px; border-top: 1px solid var(--border); margin-top: 4px;
+}
+
+/* ── Avatar palette ── */
+.av0 { background: rgba(232,169,23,.15); color: var(--gold); }
+.av1 { background: rgba(75,124,243,.15); color: var(--blue); }
+.av2 { background: rgba(34,197,94,.15);  color: var(--green); }
+.av3 { background: rgba(139,92,246,.15); color: var(--purple); }
+.av4 { background: rgba(239,68,68,.15);  color: var(--red); }
+.av5 { background: rgba(249,115,22,.15); color: var(--orange); }
+
+/* ── Payslip ── */
+.payslip-top { background: var(--gold); padding: 22px 20px 18px; color: #0f1117; }
+.payslip-company { font-family: var(--fh); font-weight: 800; font-size: 14px; letter-spacing: -.2px; }
+.payslip-addr { font-size: 10px; margin-top: 4px; opacity: .6; line-height: 1.6; font-weight: 400; }
+.payslip-period { font-family: var(--fm); font-size: 11px; margin-top: 12px; font-weight: 500; opacity: .8; }
+.payslip-empname { font-family: var(--fh); font-weight: 700; font-size: 20px; margin-top: 4px; letter-spacing: -.3px; }
+.payslip-pos { font-size: 12px; opacity: .65; margin-top: 2px; font-weight: 400; }
+.ps-body { padding: 16px; }
+.ps-row {
+  display: flex; justify-content: space-between;
+  padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.ps-row:last-child { border-bottom: none; }
+.ps-row label { color: var(--text2); font-weight: 400; }
+.ps-total-bar {
+  display: flex; justify-content: space-between; padding: 14px 16px;
+  background: var(--surface2); font-family: var(--fh); font-weight: 700; font-size: 17px;
+  letter-spacing: -.3px;
+}
+
+/* ── Reports ── */
+.sort-bar { display: flex; gap: 6px; margin-bottom: 14px; }
+.sort-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 14px;
+  font-family: var(--fh); font-size: 12px; font-weight: 500;
+  color: var(--muted); cursor: pointer; transition: all .15s;
+}
+.sort-btn:hover { border-color: var(--border2); color: var(--text2); }
+.sort-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+/* ── Deduction chips ── */
+.ded-chip {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 14px;
+  font-family: var(--fh); font-size: 11px; font-weight: 600;
+  letter-spacing: .02em; color: var(--muted); cursor: pointer;
+  white-space: nowrap; transition: all .15s; flex-shrink: 0;
+}
+.ded-chip:active { transform: scale(.96); }
+.ded-chip.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+/* ── Deduction employee card ── */
+.ded-emp-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 8px; overflow: hidden;
+  transition: border-color .15s;
+}
+.ded-emp-card:hover { border-color: var(--border2); }
+.ded-emp-hdr { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+.ded-emp-body { display: none; border-top: 1px solid var(--border); }
+.ded-emp-body.open { display: block; }
+
+/* ── Ledger table ── */
+.ded-tbl { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--fm); }
+.ded-tbl th {
+  padding: 9px 12px; color: var(--muted); font-weight: 500; font-family: var(--fh);
+  text-align: left; border-bottom: 1px solid var(--border);
+  font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+  background: var(--surface2);
+}
+.ded-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.ded-tbl tr:last-child td { border-bottom: none; }
+.ded-tbl tr:hover td { background: rgba(255,255,255,.018); }
+.ded-cell-edit {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; color: var(--text);
+  font-family: var(--fm); font-size: 12px; width: 84px;
+  text-align: right; outline: none; transition: border-color .15s;
+}
+.ded-cell-edit:focus { border-color: var(--gold); }
+.ded-summary-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: var(--surface2); border-top: 1px solid var(--border);
+}
+.ded-type-tag {
+  display: inline-flex; align-items: center; padding: 3px 8px;
+  border-radius: 6px; font-size: 10px; font-weight: 600;
+  font-family: var(--fh); letter-spacing: .04em; text-transform: uppercase;
+  background: var(--red-dim); color: var(--red); margin-bottom: 2px;
+}
+
+/* ── Period group card ── */
+.pg { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 8px; overflow: hidden; }
+.pg-hdr { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; background: var(--surface2); transition: background .15s; }
+.pg-hdr:hover { background: var(--surface3); }
+.pg-title { font-family: var(--fh); font-weight: 700; font-size: 14px; color: var(--gold); letter-spacing: -.1px; }
+.pg-meta { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 400; }
+.pg-body { display: none; padding: 6px 6px 10px; }
+.pg-body.open { display: block; }
+
+/* ── Report table ── */
+.rpt-tbl { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--fm); }
+.rpt-tbl th { text-align: left; padding: 8px 6px; color: var(--muted); font-weight: 500; font-family: var(--fh); border-bottom: 1px solid var(--border); }
+.rpt-tbl td { padding: 8px 6px; border-bottom: 1px solid var(--border); }
+.rpt-tbl tr:last-child td { border-bottom: none; }
+.rpt-tbl tfoot td { padding: 10px 6px; font-family: var(--fh); font-weight: 700; border-top: 2px solid var(--border2); }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.empty-icon { font-size: 36px; margin-bottom: 12px; opacity: .7; }
+
+/* ── Save bar ── */
+.save-bar {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.save-bar-info { font-size: 12px; color: var(--muted); font-weight: 400; }
+.save-bar-period { font-family: var(--fh); font-weight: 700; color: var(--gold); font-size: 13px; }
+
+/* ── Loading splash ── */
+#app-loading {
+  position: fixed; inset: 0; z-index: 1000; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+.splash-logo {
+  width: 68px; height: 68px; background: var(--gold); border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-weight: 800; font-size: 26px; color: #0f1117;
+  letter-spacing: -1px;
+}
+.splash-spinner {
+  width: 24px; height: 24px;
+  border: 2.5px solid var(--border2); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin .75s linear infinite;
+}
+
+/* ── Login screen ── */
+#login-screen {
+  position: fixed; inset: 0; z-index: 999; background: var(--bg);
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; padding: 24px; overflow-y: auto;
+}
+.login-logo {
+  width: 60px; height: 60px; background: var(--gold); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-weight: 800; font-size: 24px;
+  color: #0f1117; margin-bottom: 22px; flex-shrink: 0; letter-spacing: -1px;
+}
+.login-title { font-family: var(--fh); font-weight: 700; font-size: 22px; text-align: center; margin-bottom: 4px; letter-spacing: -.4px; }
+.login-sub { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 28px; font-weight: 400; }
+.login-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 24px 22px;
+  width: 100%; max-width: 380px; box-shadow: var(--shadow-md);
+}
+.login-err {
+  background: var(--red-dim); border: 1px solid rgba(239,68,68,.25);
+  border-radius: var(--r-sm); padding: 10px 13px;
+  font-size: 12px; color: var(--red); margin-bottom: 14px; display: none; font-weight: 500;
+}
+.login-spinner {
+  display: inline-block; width: 15px; height: 15px;
+  border: 2px solid rgba(15,17,23,.35); border-top-color: #0f1117;
+  border-radius: 50%; animation: spin .7s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── User chip ── */
+.user-chip {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 5px 11px;
+  cursor: pointer; flex-shrink: 0; transition: border-color .15s;
+}
+.user-chip:hover { border-color: var(--border2); }
+.user-chip-role {
+  font-size: 10px; font-family: var(--fh); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.role-admin { color: var(--gold); }
+.role-staff { color: var(--blue); }
+
+/* ── Sync indicator ── */
+.sync-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0; transition: background .3s;
+}
+.sync-dot.syncing { background: var(--gold); animation: pulse .85s ease-in-out infinite; }
+.sync-dot.err { background: var(--red); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* ── Role-based visibility ── */
+.admin-only { display: none !important; }
+body.is-admin .admin-only { display: revert !important; }
+body.is-admin .admin-only.flex-row { display: flex !important; }
+body.is-admin .admin-only.inline-btn { display: inline-flex !important; }
+.tab-admin-only { display: none; }
+body.is-admin .tab-admin-only { display: block; }
+
+/* ── Mode banner ── */
+#mode-banner {
+  display: none; position: sticky; top: 0; z-index: 200;
+  background: repeating-linear-gradient(135deg, rgba(249,115,22,.14) 0px, rgba(249,115,22,.14) 10px, transparent 10px, transparent 20px);
+  border-bottom: 2px solid var(--orange);
+  padding: 7px 20px; align-items: center; gap: 8px;
+  font-family: var(--fh); font-weight: 600; font-size: 11px;
+  color: var(--orange); letter-spacing: .04em; text-transform: uppercase;
+}
+#mode-banner.live-mode {
+  background: repeating-linear-gradient(135deg, rgba(34,197,94,.09) 0px, rgba(34,197,94,.09) 10px, transparent 10px, transparent 20px);
+  border-bottom-color: var(--green); color: var(--green);
+}
+body.test-mode .topbar { border-bottom: 2px solid var(--orange); }
+body.live-mode .topbar { border-bottom: 2px solid var(--green); }
+
+/* ── Mode toggle ── */
+.mode-toggle-wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 10px 14px; margin-bottom: 10px;
+}
+.mode-toggle-label { font-family: var(--fh); font-weight: 700; font-size: 13px; }
+.mode-seg { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+.mode-seg-btn {
+  padding: 5px 13px; font-family: var(--fh); font-weight: 600;
+  font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  border: none; background: transparent; color: var(--muted);
+  cursor: pointer; transition: all .18s;
+}
+.mode-seg-btn.active-test { background: rgba(249,115,22,.2); color: var(--orange); }
+.mode-seg-btn.active-live { background: var(--green-dim); color: var(--green); }
+
+/* ── Tab access grid ── */
+.tab-access-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+.tab-access-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 9px 12px;
+}
+.tab-access-name { font-family: var(--fh); font-weight: 600; font-size: 12px; }
+
+/* ── Toggle switch ── */
+.tog { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+.tog input { opacity: 0; width: 0; height: 0; }
+.tog-sl { position: absolute; inset: 0; background: var(--border2); border-radius: 20px; cursor: pointer; transition: .2s; }
+.tog-sl::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.tog input:checked + .tog-sl { background: var(--green); }
+.tog input:checked + .tog-sl::before { transform: translateX(16px); }
+</style>
+</head>
+<body>
+
+<!-- ══ LOADING SPLASH ══ -->
+<div id="app-loading">
+  <div class="splash-logo">31B</div>
+  <div class="splash-spinner"></div>
+</div>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-logo">31B</div>
+  <div class="login-title">31 Builders</div>
+  <div class="login-sub">Construction Supply · Tagum City<br>Sign in to continue</div>
+  <div class="login-card">
+    <div class="login-err" id="login-err"></div>
+    <div class="fg"><label class="fl">Email</label>
+      <input class="fi" id="login-email" type="email" placeholder="you@email.com" autocomplete="email" />
+    </div>
+    <div class="fg"><label class="fl">Password</label>
+      <input class="fi" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-full" id="login-btn" onclick="doLogin()" style="margin-top:8px">Sign In</button>
+  </div>
+</div>
+
+<!-- ══ APP SHELL (hidden until logged in) ══ -->
+<div id="app-shell" style="display:none">
+
+<div class="topbar">
+  <div class="logo">31B</div>
+  <div class="topbar-info">
+    <div class="topbar-title">31 Builders</div>
+    <div class="topbar-sub" id="topbar-branch-sub">Construction Supply · Tagum City</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:7px">
+    <div class="sync-dot" id="sync-dot" title="Sync status"></div>
+    <div class="period-chip admin-only" onclick="openPeriodModal()">📅 <span id="period-chip-lbl">Period</span></div>
+    <div class="user-chip" onclick="openUserMenu()">
+      <span class="user-chip-role" id="user-chip-role">—</span>
+      <span style="font-size:10px;color:var(--muted)" id="user-chip-name">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODE BANNER ══ -->
+<div id="mode-banner" style="display:none">
+  <span id="mode-banner-icon">🧪</span>
+  <span id="mode-banner-text">TEST MODE — Data is isolated. Changes will NOT affect live records.</span>
+</div>
+
+<!-- ══ BRANCH BAR (admin only) ══ -->
+<div class="branch-bar admin-only" id="branch-bar"></div>
+
+<div class="nav-tabs">
+  <div class="nav-tab active"  onclick="switchTab('dashboard',this)">Dashboard</div>
+  <div class="nav-tab tab-admin-only" onclick="switchTab('directory',this)">Directory</div>
+  <div class="nav-tab tab-admin-only" onclick="switchTab('deductions',this)">Balances</div>
+  <div class="nav-tab" onclick="switchTab('wages',this)">Wages</div>
+  <div class="nav-tab" onclick="switchTab('payslips',this)">Payslips</div>
+  <div class="nav-tab tab-admin-only" onclick="switchTab('reports',this)">Reports</div>
+</div>
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div id="page-dashboard" class="page active">
+  <div class="grid2" style="margin-bottom:14px">
+    <div class="stat-card wide">
+      <div class="stat-label">Current Pay Period</div>
+      <div id="d-period" style="font-family:var(--fh);font-weight:700;font-size:15px;color:var(--gold);margin-top:3px">—</div>
+    </div>
+    <div class="stat-card"><div class="stat-label">Total Payroll</div><div class="stat-val c-gold" id="d-earnings">₱0</div></div>
+    <div class="stat-card"><div class="stat-label">Net Pay Out</div><div class="stat-val c-green" id="d-net">₱0</div></div>
+    <div class="stat-card"><div class="stat-label">Active Staff</div><div class="stat-val c-blue" id="d-count">0</div></div>
+    <div class="stat-card"><div class="stat-label">Deductions</div><div class="stat-val c-red" id="d-ded">₱0</div></div>
+  </div>
+  <div class="sec-hdr"><div class="sec-title">Period Summary</div></div>
+  <div id="d-list"></div>
+</div>
+
+<!-- ══════════════ DIRECTORY ══════════════ -->
+<div id="page-directory" class="page">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-title">Employee Directory</div>
+      <div class="sec-sub">Name · Position · Base daily rate</div>
+    </div>
+    <button class="btn btn-gold" onclick="openDirModal(-1)">+ Add</button>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="dir-search" placeholder="Search name or position…" oninput="renderDirectory()">
+  </div>
+  <div class="roster-meta" id="dir-meta"></div>
+  <div id="dir-list"></div>
+</div>
+
+<!-- ══════════════ WAGES (current period) ══════════════ -->
+<div id="page-wages" class="page">
+  <div class="sec-hdr">
+    <div>
+      <div class="sec-title">Period Wages</div>
+      <div class="sec-sub" id="wages-period-sub">Current period entries</div>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-ghost" style="color:var(--blue);border-color:rgba(61,126,255,.3);display:flex;align-items:center;gap:5px" onclick="document.getElementById('bio-file-input').click()">
+        <span>📡</span> Import
+      </button>
+      <button class="btn btn-ghost" onclick="openAddWageModal()">+ Entry</button>
+    </div>
+  </div>
+  <!-- hidden file input for biometric XLS -->
+  <input type="file" id="bio-file-input" accept=".xls,.xlsx" style="display:none" onchange="handleBioFile(this)">
+
+  <!-- biometric import banner (shown after parse) -->
+  <div id="bio-banner" style="display:none;background:rgba(61,126,255,.08);border:1px solid rgba(61,126,255,.3);border-radius:var(--r);padding:13px 14px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-family:var(--fh);font-weight:700;font-size:13px;color:var(--blue)">📡 Biometric Data Parsed</div>
+      <button class="btn-sm" onclick="closeBioBanner()" style="font-size:10px">✕</button>
+    </div>
+    <div id="bio-banner-body"></div>
+    <div style="display:flex;gap:8px;margin-top:11px">
+      <button class="btn btn-blue" style="flex:1;padding:9px" onclick="applyBioImport()">✅ Apply to Wages</button>
+      <button class="btn btn-ghost" style="padding:9px 14px" onclick="closeBioBanner()">Cancel</button>
+    </div>
+  </div>
+
+  <div id="wages-not-added"></div>
+  <div id="wages-list"></div>
+</div>
+
+<!-- ══════════════ PAYSLIPS ══════════════ -->
+<div id="page-payslips" class="page">
+  <div class="sec-hdr"><div class="sec-title">Payslips</div></div>
+  <div id="slip-picker"></div>
+  <div id="slip-view" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <button class="btn-sm" onclick="backToSlipList()">← Back</button>
+      <button class="btn-sm" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="card" id="slip-card"></div>
+  </div>
+</div>
+
+<!-- ══════════════ DEDUCTIONS / BALANCES ══════════════ -->
+<div id="page-deductions" class="page">
+
+  <!-- header -->
+  <div class="sec-hdr" style="margin-bottom:16px">
+    <div>
+      <div class="sec-title">Balances</div>
+      <div class="sec-sub">Charges, credits & remaining balances per employee</div>
+    </div>
+    <button class="btn btn-gold" onclick="openDedEmpModal()" style="display:flex;align-items:center;gap:5px;font-size:12px">
+      <span style="font-size:16px;line-height:1">+</span> Add Record
+    </button>
+  </div>
+
+  <!-- type filter pills -->
+  <div id="ded-filter-bar" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;padding-bottom:2px">
+    <button class="ded-chip active" data-type="ALL"    onclick="setDedFilter('ALL',this)">All</button>
+    <button class="ded-chip"        data-type="SSL"    onclick="setDedFilter('SSL',this)">SSS Loan</button>
+    <button class="ded-chip"        data-type="SSCAL"  onclick="setDedFilter('SSCAL',this)">SSS Cal.</button>
+    <button class="ded-chip"        data-type="PSL"    onclick="setDedFilter('PSL',this)">Pag-IBIG Loan</button>
+    <button class="ded-chip"        data-type="PCAL"   onclick="setDedFilter('PCAL',this)">Pag-IBIG Cal.</button>
+    <button class="ded-chip"        data-type="PHIC"   onclick="setDedFilter('PHIC',this)">PhilHealth</button>
+    <button class="ded-chip"        data-type="PAGIBIG"onclick="setDedFilter('PAGIBIG',this)">Pag-IBIG</button>
+    <button class="ded-chip"        data-type="SSS"    onclick="setDedFilter('SSS',this)">SSS</button>
+    <button class="ded-chip"        data-type="CA"     onclick="setDedFilter('CA',this)">Cash Adv.</button>
+  </div>
+
+  <div id="ded-list"></div>
+</div>
+
+<!-- ══════════════ REPORTS ══════════════ -->
+<div id="page-reports" class="page">
+  <div class="sec-hdr">
+    <div class="sec-title">Payroll History</div>
+    <button class="btn btn-gold" onclick="savePeriodToHistory()">💾 Save Period</button>
+  </div>
+  <div class="sort-bar">
+    <button class="sort-btn active" id="sb-new" onclick="setSort('newest',this)">↓ Newest</button>
+    <button class="sort-btn" id="sb-old" onclick="setSort('oldest',this)">↑ Oldest</button>
+  </div>
+  <div id="report-list"></div>
+</div>
+
+<!-- ══════════════ MODAL: DIRECTORY ADD/EDIT ══════════════ -->
+<div class="modal-overlay" id="dir-modal" style="display:none" onclick="if(event.target===this)closeDirModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="dir-modal-title">Add Employee</div>
+    <div class="modal-sub">Master employee record — name, position, and base daily rate</div>
+
+    <div class="fg"><label class="fl">Full Name</label><input class="fi" id="em-name" placeholder="LAST, FIRST MI." /></div>
+    <div class="fg"><label class="fl">Position / Job Title</label>
+      <input class="fi" id="em-pos" placeholder="e.g. Laborer, Mason, Foreman, Clerk" list="pos-list" />
+      <datalist id="pos-list">
+        <option value="Laborer"><option value="Mason"><option value="Carpenter"><option value="Welder">
+        <option value="Foreman"><option value="Helper"><option value="Driver"><option value="Clerk">
+        <option value="Electrician"><option value="Plumber"><option value="Painter"><option value="Engineer">
+      </datalist>
+    </div>
+    <div class="fg"><label class="fl">Base Daily Rate (₱)</label>
+      <input class="fi" id="em-rate" type="number" placeholder="550" style="font-size:18px;font-weight:700" oninput="updateRatePreview()" />
+      <div id="rate-preview" style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center"></div>
+    </div>
+    <div class="fg"><label class="fl">Status</label>
+      <select class="fi" id="em-status"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+    </div>
+    <button class="btn-full" onclick="saveDirEntry()">Save Employee</button>
+    <button class="btn-cancel" onclick="closeDirModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: WAGE ENTRY ══════════════ -->
+<div class="modal-overlay" id="wage-modal" style="display:none" onclick="if(event.target===this)closeWageModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="wm-title">Wage Entry</div>
+    <div class="modal-sub" id="wm-sub">Enter attendance and deductions for this period</div>
+
+    <!-- Employee selector (only shown when adding new) -->
+    <div class="fg" id="wm-emp-selector">
+      <label class="fl">Employee</label>
+      <select class="fi" id="wm-emp-id" onchange="onWageEmpChange()">
+        <option value="">— Select employee —</option>
+      </select>
+    </div>
+
+    <div id="wm-rate-display" style="display:none;margin-bottom:13px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 13px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:11px;color:var(--muted)">Base Daily Rate</div>
+        <div style="font-family:var(--fh);font-weight:800;font-size:16px;color:var(--gold)" id="wm-rate-val">₱0</div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:right">Rate is set in Directory — edit there to change it</div>
+    </div>
+
+    <div class="fg2">
+      <div class="fg"><label class="fl">Days Worked</label><input class="fi" id="wm-days" type="number" placeholder="13" oninput="wagePreview()" /></div>
+      <div class="fg"><label class="fl">Regular Wage</label><input class="fi" id="wm-reg-wage" type="number" readonly style="opacity:.6" /></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">OT Minutes</label><input class="fi" id="wm-ot-mins" type="number" placeholder="0" oninput="calcWageOT()" /></div>
+      <div class="fg"><label class="fl">OT Amount (₱)</label><input class="fi" id="wm-ot-amt" type="number" placeholder="0" readonly style="opacity:.6" /></div>
+    </div>
+    <div class="fg"><label class="fl">Holiday Pay (₱)</label><input class="fi" id="wm-holiday" type="number" placeholder="0" oninput="wagePreview()" /></div>
+
+    <div class="fsec">Deductions</div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">Undertime Mins</label><input class="fi" id="wm-ut-mins" type="number" placeholder="0" oninput="calcWageUT()" /></div>
+      <div class="fg"><label class="fl">UT Amount (₱)</label><input class="fi" id="wm-ut-amt" type="number" placeholder="0" readonly style="opacity:.6" /></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">Pag-IBIG (₱)</label><input class="fi" id="wm-pagibig" type="number" placeholder="0" oninput="wagePreview()" /></div>
+      <div class="fg"><label class="fl">PhilHealth (₱)</label><input class="fi" id="wm-phic" type="number" placeholder="0" oninput="wagePreview()" /></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">SSS (₱)</label><input class="fi" id="wm-sss" type="number" placeholder="0" oninput="wagePreview()" /></div>
+      <div class="fg"><label class="fl">Cash Advance (₱)</label><input class="fi" id="wm-ca" type="number" placeholder="0" oninput="wagePreview()" /></div>
+    </div>
+
+    <div class="fsec">Loans</div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">SSS Salary Loan</label><input class="fi" id="wm-ssl" type="number" placeholder="0" oninput="wagePreview()" /></div>
+      <div class="fg"><label class="fl">SSS Calamity Loan</label><input class="fi" id="wm-sscal" type="number" placeholder="0" oninput="wagePreview()" /></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">Pag-IBIG Salary Loan</label><input class="fi" id="wm-psl" type="number" placeholder="0" oninput="wagePreview()" /></div>
+      <div class="fg"><label class="fl">Pag-IBIG Calamity Loan</label><input class="fi" id="wm-pcal" type="number" placeholder="0" oninput="wagePreview()" /></div>
+    </div>
+
+    <!-- Live preview -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-top:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span style="color:var(--muted)">Total Earnings</span><span id="wp-earn" style="color:var(--gold)">₱0.00</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span style="color:var(--muted)">Total Deductions</span><span id="wp-ded" style="color:var(--red)">₱0.00</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--fh);font-weight:800;font-size:16px;padding-top:8px;border-top:1px solid var(--border)">
+        <span>Net Pay</span><span id="wp-net" style="color:var(--green)">₱0.00</span>
+      </div>
+    </div>
+
+    <button class="btn-full" onclick="saveWageEntry()">Save Wage Entry</button>
+    <button class="btn-cancel" onclick="closeWageModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: EDIT LEDGER ENTRY ══════════════ -->
+<div class="modal-overlay" id="ded-edit-modal" style="display:none" onclick="if(event.target===this)closeDedEditModal()">
+  <div class="modal" style="max-height:80vh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div>
+        <div class="modal-title" style="margin-bottom:2px">Edit Record</div>
+        <div id="ded-edit-context" style="font-size:11px;color:var(--muted)"></div>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">Date</label><input class="fi" id="dee-date" type="date" /></div>
+      <div class="fg"><label class="fl">Reference / Particular</label><input class="fi" id="dee-particular" placeholder="e.g. PCV 5539" /></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px">
+      <div>
+        <label class="fl" style="color:var(--red)">Charge ₱</label>
+        <input class="fi" id="dee-charge" type="number" min="0" placeholder="0.00"
+          oninput="dedEditPreview()"
+          style="border-color:rgba(240,82,82,.35);text-align:right;font-size:16px;font-weight:700;color:var(--red)" />
+      </div>
+      <div>
+        <label class="fl" style="color:var(--green)">Credit ₱</label>
+        <input class="fi" id="dee-credit" type="number" min="0" placeholder="0.00"
+          oninput="dedEditPreview()"
+          style="border-color:rgba(39,201,138,.35);text-align:right;font-size:16px;font-weight:700;color:var(--green)" />
+      </div>
+    </div>
+    <div id="dee-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px">
+        <span>Balance Before This Entry</span><span id="dee-prev-before"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--fh);font-weight:700;font-size:14px;padding-top:6px;border-top:1px solid var(--border)">
+        <span style="color:var(--muted)">Balance After</span><span id="dee-prev-after"></span>
+      </div>
+    </div>
+    <button class="btn-full" onclick="saveDedEditEntry()">Save Changes</button>
+    <button class="btn-cancel" onclick="closeDedEditModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: ADD / EDIT LEDGER ENTRY ══════════════ -->
+<div class="modal-overlay" id="ded-modal" style="display:none" onclick="if(event.target===this)closeDedModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="ded-modal-title">Add Balance Record</div>
+    <div class="modal-sub">A <strong style="color:var(--red)">Charge</strong> adds to the balance · A <strong style="color:var(--green)">Credit</strong> reduces it</div>
+
+    <div class="fg">
+      <label class="fl">Employee</label>
+      <select class="fi" id="ded-emp-id" onchange="dedPreview()">
+        <option value="">— Select employee —</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Deduction Type</label>
+      <select class="fi" id="ded-type" onchange="dedPreview()">
+        <option value="SSL">SSS Salary Loan</option>
+        <option value="SSCAL">SSS Calamity Loan</option>
+        <option value="PSL">Pag-IBIG Salary Loan</option>
+        <option value="PCAL">Pag-IBIG Calamity Loan</option>
+        <option value="PHIC">PhilHealth</option>
+        <option value="PAGIBIG">Pag-IBIG Contribution</option>
+        <option value="SSS">SSS Contribution</option>
+        <option value="CA">Cash Advance</option>
+      </select>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label class="fl">Date</label><input class="fi" id="ded-date" type="date" /></div>
+      <div class="fg"><label class="fl">Reference / Particular</label><input class="fi" id="ded-particular" placeholder="e.g. PCV 5539" /></div>
+    </div>
+
+    <!-- Charge / Credit toggle-style inputs -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px">
+      <div>
+        <label class="fl" style="color:var(--red)">Charge ₱ <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(adds to balance)</span></label>
+        <input class="fi" id="ded-charge" type="number" min="0" placeholder="0.00" oninput="dedPreview()" style="border-color:rgba(240,82,82,.35);text-align:right;font-size:16px;font-weight:700;color:var(--red)" />
+      </div>
+      <div>
+        <label class="fl" style="color:var(--green)">Credit ₱ <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(reduces balance)</span></label>
+        <input class="fi" id="ded-credit" type="number" min="0" placeholder="0.00" oninput="dedPreview()" style="border-color:rgba(39,201,138,.35);text-align:right;font-size:16px;font-weight:700;color:var(--green)" />
+      </div>
+    </div>
+
+    <!-- Balance preview bar -->
+    <div id="ded-balance-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px">
+        <span>Current Balance</span><span id="dbp-current" style="color:var(--text)">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding-top:6px;border-top:1px solid var(--border)">
+        <span style="font-family:var(--fh);font-weight:700">Balance After</span>
+        <span id="dbp-after" style="font-family:var(--fh);font-weight:800;font-size:15px">—</span>
+      </div>
+    </div>
+
+    <button class="btn-full" id="ded-save-btn" onclick="saveDedEntry()">Save Record</button>
+    <button class="btn-cancel" onclick="closeDedModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: DEDUCTION PROMPT (after bio import) ══════════════ -->
+<div class="modal-overlay" id="ded-prompt-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(245,197,24,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💳</div>
+      <div class="modal-title" style="margin-bottom:0">Outstanding Balances</div>
+    </div>
+    <div class="modal-sub" style="margin-bottom:18px">These employees have active balances. Set how much to deduct this period.</div>
+    <div id="ded-prompt-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:4px"></div>
+    <button class="btn-full" onclick="applyDedPrompt()">✓ Apply Deductions to Wages</button>
+    <button class="btn-cancel" onclick="closeDedPromptModal()">Skip for now</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: LEDGER VIEW ══════════════ -->
+<div class="modal-overlay" id="ledger-modal" style="display:none" onclick="if(event.target===this)closeLedgerModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="margin-bottom:16px">
+      <div class="modal-title" id="ledger-modal-title" style="margin-bottom:2px">Ledger</div>
+      <div id="ledger-modal-sub" style="font-size:11px;color:var(--muted)"></div>
+    </div>
+    <!-- running balance pill -->
+    <div id="ledger-balance-bar" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <span style="font-size:11px;color:var(--muted)">Remaining Balance</span>
+      <span id="ledger-bal-val" style="font-family:var(--fh);font-weight:800;font-size:18px"></span>
+    </div>
+    <div id="ledger-modal-body"></div>
+    <button class="btn-full" style="background:rgba(61,126,255,.15);color:var(--blue);margin-top:14px" onclick="openAddDedEntryFromLedger()">+ Add Entry</button>
+    <button class="btn-cancel" onclick="closeLedgerModal()">Close</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: PERIOD ══════════════ -->
+<div class="modal-overlay" id="period-modal" style="display:none" onclick="if(event.target===this)closePeriodModal()">
+  <div class="modal" style="max-height:56vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Set Pay Period</div>
+    <div class="modal-sub">Used as label for payslips and to sort reports by date</div>
+    <div class="fg"><label class="fl">Period Label</label><input class="fi" id="pm-label" placeholder="e.g. APRIL 16-30, 2026" /></div>
+    <div class="fg"><label class="fl">Period Date (for sorting)</label><input class="fi" id="pm-date" type="date" /></div>
+    <button class="btn-full" onclick="savePeriod()">Apply Period</button>
+    <button class="btn-cancel" onclick="closePeriodModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: CONFIRM DELETE ══════════════ -->
+<div class="modal-overlay" id="del-modal" style="display:none" onclick="if(event.target===this)closeDelModal()">
+  <div class="modal" style="max-height:46vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:var(--red)" id="del-title">Remove?</div>
+    <div id="del-msg" style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:6px"></div>
+    <button class="btn-full btn-full-red" onclick="confirmDel()">Yes, Remove</button>
+    <button class="btn-cancel" onclick="closeDelModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ── null-safe DOM helper ──
+// Use el(id) instead of document.getElementById(id) everywhere.
+// Returns a dummy object so .style/.textContent/.className access never throws.
+const _dummy = new Proxy({}, { get: () => _dummy, set: () => true });
+function el(id) { return document.getElementById(id) || _dummy; }
+
+// ═══════════════════════════════════════════════
+// BRANCH MANAGEMENT
+// ═══════════════════════════════════════════════
+// branches[] stored in '31b_branches' — [{id, name, addr}]
+// active branch id in '31b_active_branch'
+// per-branch data keyed as '31b_v2_employees_{branchId}' etc.
+
+let branches = JSON.parse(localStorage.getItem('31b_branches') || 'null');
+if (!branches) {
+  branches = [{ id:'b1', name:'Main Branch', addr:'Tagum City, Davao del Norte' }];
+  localStorage.setItem('31b_branches', JSON.stringify(branches));
+}
+let activeBranchId = localStorage.getItem('31b_active_branch') || branches[0].id;
+// Ensure active branch exists
+if (!branches.find(b => b.id === activeBranchId)) activeBranchId = branches[0].id;
+
+function branchKey(key) { return `31b_v2_${key}_${activeBranchId}`; }
+
+function saveBranches() {
+  localStorage.setItem('31b_branches', JSON.stringify(branches));
+  localStorage.setItem('31b_active_branch', activeBranchId);
+}
+
+// ═══════════════════════════════════════════════
+// DATA MODEL
+//
+// employees[]  — master directory
+//   { id, name, position, rate, status, avatarClass }
+//
+// wageEntries[] — one entry per employee per period
+//   { empId, periodKey, days, otMins, otAmt, holiday,
+//     utMins, utAmt, pagibig, phic, sss, ca,
+//     ssl, sscal, psl, pcal }
+//
+// deductionLedger[] — all charge/credit records
+//   { id, empId, type, date, particular, charge, credit }
+//   types: SSL | SSCAL | PSL | PCAL | PHIC | PAGIBIG | SSS | CA
+//
+// history[] — saved snapshots
+//   { label, date, periodKey, rows[], totals{} }
+// ═══════════════════════════════════════════════
+
+let employees       = [];
+let wageEntries     = [];
+let deductionLedger = [];
+let history         = [];
+let currentPeriodLabel = 'APRIL 16–30, 2026';
+let currentPeriodDate  = '2026-04-16';
+
+const currentPeriodKey = () => currentPeriodLabel;
+
+function loadBranchData() {
+  const SEED_PERIOD = 'APRIL 16–30, 2026';
+  employees       = JSON.parse(localStorage.getItem(branchKey('employees'))    || 'null');
+  wageEntries     = JSON.parse(localStorage.getItem(branchKey('wages'))        || '[]');
+  deductionLedger = JSON.parse(localStorage.getItem(branchKey('deductions'))   || '[]');
+  history         = JSON.parse(localStorage.getItem(branchKey('history'))      || '[]');
+  currentPeriodLabel = localStorage.getItem(branchKey('period'))      || 'APRIL 16–30, 2026';
+  currentPeriodDate  = localStorage.getItem(branchKey('period_date')) || '2026-04-16';
+
+  // ── seed only the FIRST branch (Main Branch) on first load ──
+  if (!employees && activeBranchId === branches[0].id) {
+    employees = [
+      {id:'e1',name:'HABIN, EDGAR',   position:'Mason',   rate:550,status:'active',avatarClass:'av0'},
+      {id:'e2',name:'RULITE, ANALY',  position:'Clerk',   rate:550,status:'active',avatarClass:'av1'},
+      {id:'e3',name:'TOÑARES, ALFREDO',position:'Laborer',rate:525,status:'active',avatarClass:'av2'},
+      {id:'e4',name:'TERO, ANALYN',   position:'Helper',  rate:525,status:'active',avatarClass:'av3'},
+      {id:'e5',name:'NILONG, NAIMA',  position:'Laborer', rate:525,status:'active',avatarClass:'av4'},
+      {id:'e6',name:'GALUPO, JEOFFREY',position:'Mason',  rate:525,status:'active',avatarClass:'av5'},
+    ];
+    wageEntries = [
+      {empId:'e1',periodKey:SEED_PERIOD,days:12,otMins:11, otAmt:15.76, holiday:0,utMins:272,utAmt:311.67,pagibig:0,phic:0,sss:0,ca:2552,ssl:995,sscal:0,psl:785,pcal:427},
+      {empId:'e2',periodKey:SEED_PERIOD,days:13,otMins:61, otAmt:87.37, holiday:0,utMins:0,  utAmt:0,     pagibig:0,phic:0,sss:0,ca:970, ssl:995,sscal:0,psl:886,pcal:0},
+      {empId:'e3',periodKey:SEED_PERIOD,days:13,otMins:0,  otAmt:0,     holiday:0,utMins:0,  utAmt:0,     pagibig:0,phic:0,sss:0,ca:500, ssl:995,sscal:0,psl:571,pcal:0},
+      {empId:'e4',periodKey:SEED_PERIOD,days:12,otMins:6,  otAmt:8.20,  holiday:0,utMins:9,  utAmt:9.84,  pagibig:0,phic:0,sss:0,ca:2500,ssl:453,sscal:0,psl:0,  pcal:0},
+      {empId:'e5',periodKey:SEED_PERIOD,days:9, otMins:9,  otAmt:12.30, holiday:0,utMins:213,utAmt:232.97,pagibig:0,phic:0,sss:0,ca:1545,ssl:0,  sscal:0,psl:330,pcal:0},
+      {empId:'e6',periodKey:SEED_PERIOD,days:13,otMins:14, otAmt:19.14, holiday:0,utMins:240,utAmt:262.50,pagibig:0,phic:0,sss:0,ca:1450,ssl:0,  sscal:0,psl:1678,pcal:0},
+    ];
+    save();
+  } else if (!employees) {
+    employees = [];
+    save();
+  }
+}
+
+function save() {
+  localStorage.setItem(branchKey('employees'),  JSON.stringify(employees));
+  localStorage.setItem(branchKey('wages'),      JSON.stringify(wageEntries));
+  localStorage.setItem(branchKey('deductions'), JSON.stringify(deductionLedger));
+  localStorage.setItem(branchKey('history'),    JSON.stringify(history));
+  localStorage.setItem(branchKey('period'),     currentPeriodLabel);
+  localStorage.setItem(branchKey('period_date'),currentPeriodDate);
+}
+
+function switchBranch(id) {
+  activeBranchId = id;
+  saveBranches();
+  loadBranchData();
+  wageDetailOpen = {};
+  dedOpenCards   = {};
+  renderBranchBar();
+  renderAll();
+}
+
+function renderAll() {
+  renderDashboard();
+  setPeriodChip();
+  // re-render whichever tab is currently visible
+  const active = document.querySelector('.page.active');
+  if (active) {
+    const id = active.id.replace('page-','');
+    if (id !== 'dashboard') {
+      ({directory:renderDirectory, deductions:renderDeductions, wages:renderWages,
+        payslips:renderPayslips, reports:renderReports})[id]?.();
+    }
+  }
+  // update topbar subtitle
+  const br = branches.find(b => b.id === activeBranchId);
+  document.getElementById('topbar-branch-sub').textContent =
+    br ? (br.addr || br.name) : 'Construction Supply · Tagum City';
+}
+
+function renderBranchBar() {
+  const bar = el('branch-bar');
+  bar.innerHTML = branches.map(b => `
+    <button class="branch-pill ${b.id === activeBranchId ? 'active' : ''}"
+      onclick="switchBranch('${b.id}')"
+      oncontextmenu="event.preventDefault();openBranchModal('${b.id}')"
+      ondblclick="openBranchModal('${b.id}')"
+      title="${b.addr ? b.addr : 'Double-tap to edit'}">${b.name}</button>
+  `).join('') +
+  `<button class="branch-pill-add" onclick="openBranchModal(null)" title="Add branch">+</button>`;
+}
+
+// ── Branch CRUD modal ──
+let branchEditId = null;
+
+function openBranchModal(id) {
+  branchEditId = id;
+  const b = id ? branches.find(x => x.id === id) : null;
+  document.getElementById('branch-modal-title').textContent = b ? 'Edit Branch' : 'Add Branch';
+  document.getElementById('branch-modal-sub').textContent   = b ? b.name : 'Each branch has its own employees, wages, and history';
+  document.getElementById('bm-name').value = b ? b.name : '';
+  document.getElementById('bm-addr').value = b ? (b.addr||'') : '';
+  document.getElementById('bm-save-btn').textContent = b ? 'Save Changes' : 'Add Branch';
+  // Show delete button only for non-active branches (can't delete what you're on) and not the only branch
+  const canDelete = b && branches.length > 1 && id !== activeBranchId;
+  document.getElementById('bm-delete-wrap').style.display = canDelete ? 'block' : 'none';
+  document.getElementById('branch-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('bm-name').focus(), 100);
+}
+
+function closeBranchModal() { document.getElementById('branch-modal').style.display = 'none'; branchEditId = null; }
+
+function saveBranch() {
+  const name = document.getElementById('bm-name').value.trim();
+  if (!name) { alert('Enter a branch name'); return; }
+  const addr = document.getElementById('bm-addr').value.trim();
+  if (branchEditId) {
+    const idx = branches.findIndex(b => b.id === branchEditId);
+    if (idx >= 0) branches[idx] = { ...branches[idx], name, addr };
+  } else {
+    const newId = 'b' + Date.now().toString(36);
+    branches.push({ id: newId, name, addr });
+    saveBranches();
+    closeBranchModal();
+    renderBranchBar();
+    switchBranch(newId);   // auto-switch to the new branch
+    return;
+  }
+  saveBranches();
+  closeBranchModal();
+  renderBranchBar();
+  renderAll();
+}
+
+function deleteBranch() {
+  if (!branchEditId) return;
+  const b = branches.find(x => x.id === branchEditId);
+  if (!confirm(`Delete branch "${b?.name}"?\nThis will permanently erase all its employees, wages, and history.`)) return;
+  // Wipe all localStorage keys for this branch
+  ['employees','wages','deductions','history','period','period_date'].forEach(k => {
+    localStorage.removeItem(`31b_v2_${k}_${branchEditId}`);
+  });
+  branches = branches.filter(x => x.id !== branchEditId);
+  saveBranches();
+  closeBranchModal();
+  renderBranchBar();
+  // Switch to first branch
+  switchBranch(branches[0].id);
+}
+
+// ── helpers ──
+const fmt  = n => '₱' + Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtN = n => Number(n||0).toFixed(2);
+const uid  = () => 'e' + Date.now().toString(36);
+const AV   = ['av0','av1','av2','av3','av4','av5'];
+const initials = name => name.split(/[\s,]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+
+function calcWage(emp, w) {
+  const regWage = emp.rate * (w.days||0);
+  const earnings = regWage + (w.otAmt||0) + (w.holiday||0);
+  const deductions = (w.utAmt||0)+(w.pagibig||0)+(w.phic||0)+(w.sss||0)+(w.ca||0)+(w.ssl||0)+(w.sscal||0)+(w.psl||0)+(w.pcal||0);
+  return { regWage, earnings, deductions, net: earnings - deductions };
+}
+
+function getWage(empId, periodKey) {
+  return wageEntries.find(w => w.empId === empId && w.periodKey === periodKey) || null;
+}
+
+function activeEmps() { return employees.filter(e => e.status === 'active'); }
+
+let sortDir = 'newest';
+let editDirIndex = -1;
+let editWageKey = null; // {empId, periodKey}
+let delAction = null;
+let addBalCtx = null;
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+function switchTab(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  if (el)   el.classList.add('active');
+  ({dashboard:renderDashboard, directory:renderDirectory, deductions:renderDeductions, wages:renderWages, payslips:renderPayslips, reports:renderReports})[id]?.();
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const pk = currentPeriodKey();
+  document.getElementById('d-period').textContent = currentPeriodLabel;
+  setPeriodChip();
+
+  const act = activeEmps();
+  let totE=0,totN=0,totD=0;
+  const rows = act.map(emp => {
+    const w = getWage(emp.id, pk);
+    if (!w) return null;
+    const c = calcWage(emp, w);
+    totE += c.earnings; totN += c.net; totD += c.deductions;
+    return {emp, w, c};
+  }).filter(Boolean);
+
+  document.getElementById('d-earnings').textContent = fmt(totE);
+  document.getElementById('d-net').textContent      = fmt(totN);
+  document.getElementById('d-ded').textContent      = fmt(totD);
+  document.getElementById('d-count').textContent    = act.length;
+
+  document.getElementById('d-list').innerHTML = rows.length
+    ? rows.map(({emp,w,c}) => `
+      <div class="card" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:11px;padding:12px 14px">
+          <div class="dir-avatar ${emp.avatarClass}" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:13px;flex-shrink:0">${initials(emp.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:var(--fh);font-weight:700;font-size:13px">${emp.name}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${emp.position} · ${w.days} days · ₱${emp.rate}/day</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--fh);font-weight:800;font-size:15px;color:var(--green)">${fmt(c.net)}</div>
+            <div style="font-size:9px;color:var(--muted)">net pay</div>
+          </div>
+        </div>
+      </div>`)
+      .join('')
+    : `<div class="empty"><div class="empty-icon">📋</div>No wage entries for this period yet.<br>Go to <strong style="color:var(--gold)">Wages</strong> to add entries.</div>`;
+}
+
+// ═══════════════════════════════════════════════
+// DIRECTORY
+// ═══════════════════════════════════════════════
+function renderDirectory() {
+  const q = (document.getElementById('dir-search')?.value || '').toLowerCase();
+  const list = employees.map((e,i)=>({...e,_i:i})).filter(e =>
+    !q || e.name.toLowerCase().includes(q) || e.position.toLowerCase().includes(q));
+  const active   = list.filter(e => e.status==='active');
+  const inactive = list.filter(e => e.status!=='active');
+
+  document.getElementById('dir-meta').textContent =
+    q ? `${list.length} result${list.length!==1?'s':''} · "${q}"`
+      : `${active.length} active · ${inactive.length} inactive`;
+
+  const mkRow = (e, dim) => `
+    <div class="dir-row ${dim?'dimmed':''}">
+      <div class="dir-main">
+        <div class="dir-avatar ${e.avatarClass}" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:13px;flex-shrink:0">${initials(e.name)}</div>
+        <div class="dir-info">
+          <div class="dir-name">${e.name}</div>
+          <div class="dir-pos">${e.position} <span class="pos-badge ${e.status==='active'?'pill-active':'pill-inactive'}">${e.status}</span></div>
+          <div class="dir-rate"><span style="color:var(--gold);font-weight:600">₱${e.rate}</span><span style="color:var(--muted);font-size:10px">/day</span><span style="color:var(--muted);font-size:10px"> · ≈${fmt(e.rate*26)}/mo</span></div>
+        </div>
+        <div class="dir-actions">
+          <button class="btn-icon bi-edit" onclick="openDirModal(${e._i})" title="Edit">✏️</button>
+          ${e.status==='active'
+            ? `<button class="btn-icon bi-del" onclick="openDelDir(${e._i})" title="Deactivate">🗑</button>`
+            : `<button class="btn-icon bi-restore" onclick="restoreDir(${e._i})" title="Restore">↩️</button>`}
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('dir-list').innerHTML =
+    (!active.length && !inactive.length)
+      ? `<div class="empty"><div class="empty-icon">👷</div>No employees found.</div>`
+      : active.map(e=>mkRow(e,false)).join('') +
+        (inactive.length ? `<div style="font-size:10px;color:var(--muted);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);padding-bottom:6px">Inactive (${inactive.length})</div>` + inactive.map(e=>mkRow(e,true)).join('') : '');
+}
+
+function openDirModal(i) {
+  editDirIndex = i;
+  const e = i >= 0 ? employees[i] : {};
+  document.getElementById('dir-modal-title').textContent = i >= 0 ? 'Edit Employee' : 'Add Employee';
+  document.getElementById('em-name').value   = e.name     || '';
+  document.getElementById('em-pos').value    = e.position || '';
+  document.getElementById('em-rate').value   = e.rate     || '';
+  document.getElementById('em-status').value = e.status   || 'active';
+  updateRatePreview();
+  document.getElementById('dir-modal').style.display = 'flex';
+}
+function closeDirModal() { document.getElementById('dir-modal').style.display='none'; }
+function updateRatePreview() {
+  const r = parseFloat(document.getElementById('em-rate').value)||0;
+  document.getElementById('rate-preview').textContent = r ? `≈ ${fmt(r*26)} / month  ·  ≈ ${fmt(r*313)} / year` : '';
+}
+function saveDirEntry() {
+  const name = document.getElementById('em-name').value.trim();
+  if (!name) { alert('Enter a name'); return; }
+  const pos    = document.getElementById('em-pos').value.trim() || 'Laborer';
+  const rate   = parseFloat(document.getElementById('em-rate').value) || 0;
+  const status = document.getElementById('em-status').value;
+  if (editDirIndex >= 0) {
+    const old = employees[editDirIndex];
+    employees[editDirIndex] = { ...old, name, position:pos, rate, status };
+  } else {
+    const av = AV[employees.length % AV.length];
+    employees.push({ id:uid(), name, position:pos, rate, status, avatarClass:av });
+  }
+  save(); closeDirModal(); renderDirectory(); renderDashboard();
+}
+function openDelDir(i) {
+  delAction = () => { employees[i].status='inactive'; save(); renderDirectory(); renderDashboard(); };
+  document.getElementById('del-title').textContent = 'Deactivate Employee?';
+  document.getElementById('del-msg').textContent   = `"${employees[i].name}" will be marked inactive and removed from payroll. Their historical records are preserved.`;
+  document.getElementById('del-modal').style.display = 'flex';
+}
+function restoreDir(i) { employees[i].status='active'; save(); renderDirectory(); renderDashboard(); }
+
+// ═══════════════════════════════════════════════
+// WAGES
+// ═══════════════════════════════════════════════
+let wageDetailOpen = {};
+
+function renderWages() {
+  const pk = currentPeriodKey();
+  document.getElementById('wages-period-sub').textContent = currentPeriodLabel;
+  const act = activeEmps();
+
+  const withEntry    = act.filter(e => getWage(e.id, pk));
+  const withoutEntry = act.filter(e => !getWage(e.id, pk));
+
+  // "not added" hints
+  document.getElementById('wages-not-added').innerHTML = withoutEntry.length
+    ? `<div style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${withoutEntry.length} employee${withoutEntry.length!==1?'s':''} without an entry this period</div>
+        ${withoutEntry.map(e=>`
+          <div class="add-wage-hint" onclick="openAddWageModalFor('${e.id}')">
+            <div class="dir-avatar ${e.avatarClass}" style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:700;font-size:12px;flex-shrink:0">${initials(e.name)}</div>
+            <div>
+              <div class="add-wage-hint-name">${e.name}</div>
+              <div class="add-wage-hint-text">${e.position} · ₱${e.rate}/day — tap to add entry</div>
+            </div>
+            <span style="margin-left:auto;color:var(--gold);font-size:18px">+</span>
+          </div>`).join('')}
+      </div>`
+    : '';
+
+  // wage entries
+  document.getElementById('wages-list').innerHTML = withEntry.length
+    ? `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${withEntry.length} entr${withEntry.length!==1?'ies':'y'} this period</div>` +
+      withEntry.map(emp => {
+        const w = getWage(emp.id, pk);
+        const c = calcWage(emp, w);
+        const open = wageDetailOpen[emp.id];
+        return `<div class="wage-row">
+          <div class="wage-main" onclick="toggleWageDetail('${emp.id}')">
+            <div class="wage-avatar ${emp.avatarClass}">${initials(emp.name)}</div>
+            <div class="wage-info">
+              <div class="wage-name">${emp.name}</div>
+              <div class="wage-meta">${emp.position} · ${w.days} days · ₱${emp.rate}/day</div>
+            </div>
+            <div class="wage-net">
+              <div class="wage-net-val">${fmt(c.net)}</div>
+              <div class="wage-net-lbl">net pay</div>
+            </div>
+          </div>
+          <div class="wage-detail ${open?'open':''}" id="wdet-${emp.id}">
+            <div class="wd-section">Earnings</div>
+            <div class="wd-row"><label>Regular Wage</label><span style="color:var(--green)">${fmt(c.regWage)}</span></div>
+            <div class="wd-row"><label>Overtime (${w.otMins} mins)</label><span style="color:var(--green)">${fmt(w.otAmt)}</span></div>
+            <div class="wd-row"><label>Holiday Pay</label><span style="color:var(--green)">${fmt(w.holiday)}</span></div>
+            <div class="wd-row"><label style="font-weight:600;color:var(--text)">Total Earnings</label><span style="font-weight:700;color:var(--green)">${fmt(c.earnings)}</span></div>
+            <div class="wd-section">Deductions</div>
+            <div class="wd-row"><label>Undertime (${w.utMins} mins)</label><span style="color:var(--red)">${fmt(w.utAmt)}</span></div>
+            <div class="wd-row"><label>Pag-IBIG</label><span style="color:var(--red)">${fmt(w.pagibig)}</span></div>
+            <div class="wd-row"><label>PhilHealth</label><span style="color:var(--red)">${fmt(w.phic)}</span></div>
+            <div class="wd-row"><label>SSS</label><span style="color:var(--red)">${fmt(w.sss)}</span></div>
+            <div class="wd-row"><label>Cash Advance</label><span style="color:var(--red)">${fmt(w.ca)}</span></div>
+            <div class="wd-row"><label>SSS Salary Loan</label><span style="color:var(--red)">${fmt(w.ssl)}</span></div>
+            <div class="wd-row"><label>SSS Calamity Loan</label><span style="color:var(--red)">${fmt(w.sscal)}</span></div>
+            <div class="wd-row"><label>Pag-IBIG Salary Loan</label><span style="color:var(--red)">${fmt(w.psl)}</span></div>
+            <div class="wd-row"><label>Pag-IBIG Calamity Loan</label><span style="color:var(--red)">${fmt(w.pcal)}</span></div>
+            <div class="wd-row"><label style="font-weight:600;color:var(--text)">Total Deductions</label><span style="font-weight:700;color:var(--red)">${fmt(c.deductions)}</span></div>
+            <div class="wd-row" style="padding:10px 0"><label style="font-family:var(--fh);font-weight:800;font-size:14px">NET PAY</label><span style="font-family:var(--fh);font-weight:800;font-size:18px;color:var(--green)">${fmt(c.net)}</span></div>
+            <div class="wd-actions">
+              <button class="btn-edit-blue" onclick="openEditWageModal('${emp.id}','${pk.replace(/'/g,"\\'")}')">✏️ Edit Entry</button>
+              <button class="btn-icon bi-del" onclick="openDelWage('${emp.id}','${pk.replace(/'/g,"\\'")}')">🗑</button>
+            </div>
+            ${renderWageBalancePanel(emp.id, pk)}
+          </div>
+        </div>`;
+      }).join('')
+    : `<div class="empty" style="padding:20px"><div class="empty-icon">📝</div>No wage entries yet for this period.</div>`;
+}
+
+function toggleWageDetail(empId) {
+  wageDetailOpen[empId] = !wageDetailOpen[empId];
+  const el = document.getElementById('wdet-' + empId);
+  if (el) el.classList.toggle('open', wageDetailOpen[empId]);
+}
+
+// Renders a balance notice panel inside a wage entry row
+function renderWageBalancePanel(empId, pk) {
+  const balances = getEmployeeBalances(empId);
+  if (!balances.length) return '';
+
+  const w = getWage(empId, pk);
+
+  const rows = balances.map(b => {
+    const field    = DED_FIELD[b.type];
+    const current  = w ? (w[field] || 0) : 0;
+    const alreadyIn = current > 0;
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;color:var(--text)">${b.label}</div>
+          <div style="font-size:10px;color:var(--red);margin-top:1px">Balance: ${fmt(b.balance)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          ${alreadyIn ? `<span style="font-size:10px;color:var(--green);font-family:var(--fh);font-weight:700">✓ ${fmt(current)} added</span>` : ''}
+          <button onclick="addBalanceToEntry('${empId}','${pk.replace(/'/g,"\\'")}','${b.type}',${b.balance})"
+            style="background:${alreadyIn?'rgba(39,201,138,.12)':'rgba(245,197,24,.12)'};border:1px solid ${alreadyIn?'rgba(39,201,138,.3)':'rgba(245,197,24,.3)'};border-radius:6px;color:${alreadyIn?'var(--green)':'var(--gold)'};font-size:10px;font-family:var(--fh);font-weight:700;padding:4px 10px;cursor:pointer;white-space:nowrap">
+            ${alreadyIn ? '✎ Edit' : '+ Add'}
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div style="margin:10px 0 0;border:1px solid rgba(245,197,24,.2);border-radius:10px;overflow:hidden">
+      <div style="background:rgba(245,197,24,.07);padding:8px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(245,197,24,.15)">
+        <span style="font-size:12px">💳</span>
+        <span style="font-family:var(--fh);font-weight:700;font-size:11px;color:var(--gold)">Outstanding Balances</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:2px">${balances.length} item${balances.length!==1?'s':''}</span>
+      </div>
+      <div style="padding:0 12px 4px">${rows}</div>
+    </div>`;
+}
+
+// Add or update a balance deduction in the wage entry inline
+function addBalanceToEntry(empId, pk, type, balance) {
+  const field   = DED_FIELD[type];
+  const w       = getWage(empId, pk);
+  if (!w) { alert('No wage entry found for this employee.'); return; }
+  const current = w[field] || 0;
+
+  // Store context and open the mini modal
+  addBalCtx = { empId, pk, type, balance, field };
+  const emp = employees.find(e => e.id === empId);
+  document.getElementById('add-bal-title').textContent = DED_TYPES[type];
+  document.getElementById('add-bal-empname').textContent = emp?.name || '';
+  document.getElementById('add-bal-balance').textContent = fmt(balance);
+  document.getElementById('add-bal-amount').value = current > 0 ? current.toFixed(2) : balance.toFixed(2);
+  document.getElementById('add-bal-modal').style.display = 'flex';
+}
+
+function closeAddBalModal() { document.getElementById('add-bal-modal').style.display = 'none'; addBalCtx = null; }
+
+function confirmAddBalance() {
+  if (!addBalCtx) return;
+  const amount = parseFloat(document.getElementById('add-bal-amount').value) || 0;
+  if (amount < 0) { alert('Amount cannot be negative.'); return; }
+  const idx = wageEntries.findIndex(e => e.empId === addBalCtx.empId && e.periodKey === addBalCtx.pk);
+  if (idx < 0) return;
+  wageEntries[idx][addBalCtx.field] = amount;
+  save(); closeAddBalModal(); renderWages();
+}
+
+// Wage modal helpers
+function openAddWageModal() { openAddWageModalFor(''); }
+function openAddWageModalFor(empId) {
+  editWageKey = null;
+  document.getElementById('wm-title').textContent = 'Add Wage Entry';
+  document.getElementById('wm-sub').textContent   = currentPeriodLabel;
+  document.getElementById('wm-emp-selector').style.display = 'block';
+
+  // populate selector
+  const sel = document.getElementById('wm-emp-id');
+  const act = activeEmps();
+  const pk  = currentPeriodKey();
+  sel.innerHTML = '<option value="">— Select employee —</option>' +
+    act.map(e => {
+      const hasEntry = !!getWage(e.id, pk);
+      return `<option value="${e.id}" ${hasEntry?'disabled':''} ${e.id===empId?'selected':''}>` +
+        `${e.name} (₱${e.rate}/day)${hasEntry?' ✓':''}</option>`;
+    }).join('');
+
+  clearWageForm();
+  if (empId) { sel.value = empId; onWageEmpChange(); }
+  document.getElementById('wage-modal').style.display = 'flex';
+}
+
+function openEditWageModal(empId, pk) {
+  editWageKey = { empId, periodKey: pk };
+  const emp = employees.find(e => e.id === empId);
+  const w   = getWage(empId, pk);
+  document.getElementById('wm-title').textContent = 'Edit Wage Entry';
+  document.getElementById('wm-sub').textContent   = `${emp.name} · ${pk}`;
+  document.getElementById('wm-emp-selector').style.display = 'none';
+
+  document.getElementById('wm-rate-display').style.display = 'block';
+  document.getElementById('wm-rate-val').textContent = fmt(emp.rate);
+
+  fillWageForm(w, emp.rate);
+  document.getElementById('wage-modal').style.display = 'flex';
+}
+
+function onWageEmpChange() {
+  const id = document.getElementById('wm-emp-id').value;
+  if (!id) { document.getElementById('wm-rate-display').style.display='none'; clearWageForm(); return; }
+  const emp = employees.find(e => e.id === id);
+  document.getElementById('wm-rate-display').style.display = 'block';
+  document.getElementById('wm-rate-val').textContent = fmt(emp.rate);
+  clearWageForm();
+}
+
+function clearWageForm() {
+  ['wm-days','wm-reg-wage','wm-ot-mins','wm-ot-amt','wm-holiday',
+   'wm-ut-mins','wm-ut-amt','wm-pagibig','wm-phic','wm-sss','wm-ca',
+   'wm-ssl','wm-sscal','wm-psl','wm-pcal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['wp-earn','wp-ded','wp-net'].forEach(id => { document.getElementById(id).textContent = '₱0.00'; });
+}
+
+function fillWageForm(w, rate) {
+  document.getElementById('wm-days').value     = w.days    || '';
+  document.getElementById('wm-reg-wage').value = fmtN(rate * (w.days||0));
+  document.getElementById('wm-ot-mins').value  = w.otMins  || 0;
+  document.getElementById('wm-ot-amt').value   = fmtN(w.otAmt);
+  document.getElementById('wm-holiday').value  = w.holiday || 0;
+  document.getElementById('wm-ut-mins').value  = w.utMins  || 0;
+  document.getElementById('wm-ut-amt').value   = fmtN(w.utAmt);
+  document.getElementById('wm-pagibig').value  = w.pagibig || 0;
+  document.getElementById('wm-phic').value     = w.phic    || 0;
+  document.getElementById('wm-sss').value      = w.sss     || 0;
+  document.getElementById('wm-ca').value       = w.ca      || 0;
+  document.getElementById('wm-ssl').value      = w.ssl     || 0;
+  document.getElementById('wm-sscal').value    = w.sscal   || 0;
+  document.getElementById('wm-psl').value      = w.psl     || 0;
+  document.getElementById('wm-pcal').value     = w.pcal    || 0;
+  wagePreview();
+}
+
+function getModalRate() {
+  if (editWageKey) {
+    const emp = employees.find(e => e.id === editWageKey.empId);
+    return emp ? emp.rate : 0;
+  }
+  const id = document.getElementById('wm-emp-id').value;
+  if (!id) return 0;
+  const emp = employees.find(e => e.id === id);
+  return emp ? emp.rate : 0;
+}
+
+function calcWageOT() {
+  const r = getModalRate();
+  const m = parseFloat(document.getElementById('wm-ot-mins').value)||0;
+  document.getElementById('wm-ot-amt').value = fmtN((r/8)*1.25*m/60);
+  wagePreview();
+}
+function calcWageUT() {
+  const r = getModalRate();
+  const m = parseFloat(document.getElementById('wm-ut-mins').value)||0;
+  document.getElementById('wm-ut-amt').value = fmtN((r/8)*m/60);
+  wagePreview();
+}
+function wagePreview() {
+  const r    = getModalRate();
+  const days = parseFloat(document.getElementById('wm-days').value)||0;
+  document.getElementById('wm-reg-wage').value = fmtN(r * days);
+  const earn = r*days + (parseFloat(document.getElementById('wm-ot-amt').value)||0) + (parseFloat(document.getElementById('wm-holiday').value)||0);
+  const ded  = (parseFloat(document.getElementById('wm-ut-amt').value)||0)+(parseFloat(document.getElementById('wm-pagibig').value)||0)+
+               (parseFloat(document.getElementById('wm-phic').value)||0)+(parseFloat(document.getElementById('wm-sss').value)||0)+
+               (parseFloat(document.getElementById('wm-ca').value)||0)+(parseFloat(document.getElementById('wm-ssl').value)||0)+
+               (parseFloat(document.getElementById('wm-sscal').value)||0)+(parseFloat(document.getElementById('wm-psl').value)||0)+
+               (parseFloat(document.getElementById('wm-pcal').value)||0);
+  document.getElementById('wp-earn').textContent = fmt(earn);
+  document.getElementById('wp-ded').textContent  = fmt(ded);
+  document.getElementById('wp-net').textContent  = fmt(earn-ded);
+}
+
+function closeWageModal() { document.getElementById('wage-modal').style.display='none'; }
+
+function saveWageEntry() {
+  let empId, pk;
+  if (editWageKey) {
+    empId = editWageKey.empId;
+    pk    = editWageKey.periodKey;
+  } else {
+    empId = document.getElementById('wm-emp-id').value;
+    pk    = currentPeriodKey();
+    if (!empId) { alert('Select an employee'); return; }
+  }
+  const entry = {
+    empId, periodKey: pk,
+    days:   parseFloat(document.getElementById('wm-days').value)||0,
+    otMins: parseFloat(document.getElementById('wm-ot-mins').value)||0,
+    otAmt:  parseFloat(document.getElementById('wm-ot-amt').value)||0,
+    holiday:parseFloat(document.getElementById('wm-holiday').value)||0,
+    utMins: parseFloat(document.getElementById('wm-ut-mins').value)||0,
+    utAmt:  parseFloat(document.getElementById('wm-ut-amt').value)||0,
+    pagibig:parseFloat(document.getElementById('wm-pagibig').value)||0,
+    phic:   parseFloat(document.getElementById('wm-phic').value)||0,
+    sss:    parseFloat(document.getElementById('wm-sss').value)||0,
+    ca:     parseFloat(document.getElementById('wm-ca').value)||0,
+    ssl:    parseFloat(document.getElementById('wm-ssl').value)||0,
+    sscal:  parseFloat(document.getElementById('wm-sscal').value)||0,
+    psl:    parseFloat(document.getElementById('wm-psl').value)||0,
+    pcal:   parseFloat(document.getElementById('wm-pcal').value)||0,
+  };
+  const idx = wageEntries.findIndex(w => w.empId===empId && w.periodKey===pk);
+  if (idx >= 0) wageEntries[idx] = entry; else wageEntries.push(entry);
+  save(); closeWageModal(); renderWages(); renderDashboard();
+}
+
+function openDelWage(empId, pk) {
+  const emp = employees.find(e => e.id === empId);
+  delAction = () => {
+    wageEntries = wageEntries.filter(w => !(w.empId===empId && w.periodKey===pk));
+    save(); renderWages(); renderDashboard();
+  };
+  document.getElementById('del-title').textContent = 'Delete Wage Entry?';
+  document.getElementById('del-msg').textContent   = `Remove wage entry for "${emp?.name}" in period "${pk}"?`;
+  document.getElementById('del-modal').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════
+// PAYSLIPS
+// ═══════════════════════════════════════════════
+function renderPayslips() {
+  const pk  = currentPeriodKey();
+  const act = activeEmps().filter(e => getWage(e.id, pk));
+  document.getElementById('slip-picker').style.display = 'block';
+  document.getElementById('slip-view').style.display   = 'none';
+  document.getElementById('slip-picker').innerHTML =
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Tap an employee to view their payslip for <span style="color:var(--gold)">'+currentPeriodLabel+'</span></div>' +
+    (act.length ? act.map(emp => {
+      const w = getWage(emp.id, pk);
+      const c = calcWage(emp, w);
+      return `<div class="payslip-select card" style="margin-bottom:10px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="viewPayslip('${emp.id}','${pk.replace(/'/g,"\\'")}')">
+        <div>
+          <div style="font-family:var(--fh);font-weight:700;font-size:14px">${emp.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${emp.position} · ${w.days} days</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--fh);font-weight:800;color:var(--green);font-size:15px">${fmt(c.net)}</div>
+          <div style="font-size:9px;color:var(--muted)">net pay ›</div>
+        </div>
+      </div>`;
+    }).join('') : `<div class="empty"><div class="empty-icon">📄</div>No wage entries for this period.<br>Add entries in the <strong style="color:var(--gold)">Wages</strong> tab first.</div>`);
+}
+
+function backToSlipList() {
+  document.getElementById('slip-view').style.display='none';
+  document.getElementById('slip-picker').style.display='block';
+}
+
+function viewPayslip(empId, pk) {
+  const emp = employees.find(e => e.id === empId);
+  const w   = getWage(empId, pk);
+  const c   = calcWage(emp, w);
+  document.getElementById('slip-picker').style.display = 'none';
+  document.getElementById('slip-view').style.display   = 'block';
+  document.getElementById('slip-card').innerHTML = `
+    <div class="payslip-top">
+      <div class="payslip-company">31 BUILDERS CONSTRUCTION SUPPLY</div>
+      <div class="payslip-addr">PRK. PARAISO, SOBRECARY ST., MAGUGPO POBLACION<br>TAGUM CITY, DAVAO DEL NORTE</div>
+      <div class="payslip-period">${pk}</div>
+      <div class="payslip-empname">${emp.name}</div>
+      <div class="payslip-pos">${emp.position}</div>
+    </div>
+    <div class="ps-body">
+      <div class="wd-section" style="padding-top:0">Earnings</div>
+      <div class="ps-row"><label>Days Worked</label><span>${w.days} days × ${fmt(emp.rate)}</span></div>
+      <div class="ps-row"><label>Regular Wage</label><span>${fmt(c.regWage)}</span></div>
+      <div class="ps-row"><label>Overtime (${w.otMins} mins)</label><span>${fmt(w.otAmt)}</span></div>
+      <div class="ps-row"><label>Holiday Pay</label><span>${fmt(w.holiday)}</span></div>
+      <div class="ps-row" style="font-weight:700"><label>Total Earnings</label><span style="color:var(--green)">${fmt(c.earnings)}</span></div>
+      <div class="wd-section">Deductions</div>
+      <div class="ps-row"><label>Undertime (${w.utMins} mins)</label><span style="color:var(--red)">${fmt(w.utAmt)}</span></div>
+      <div class="ps-row"><label>Pag-IBIG</label><span style="color:var(--red)">${fmt(w.pagibig)}</span></div>
+      <div class="ps-row"><label>PhilHealth</label><span style="color:var(--red)">${fmt(w.phic)}</span></div>
+      <div class="ps-row"><label>SSS</label><span style="color:var(--red)">${fmt(w.sss)}</span></div>
+      <div class="ps-row"><label>Cash Advance</label><span style="color:var(--red)">${fmt(w.ca)}</span></div>
+      <div class="wd-section">Loans</div>
+      <div class="ps-row"><label>SSS Salary Loan</label><span style="color:var(--red)">${fmt(w.ssl)}</span></div>
+      <div class="ps-row"><label>SSS Calamity Loan</label><span style="color:var(--red)">${fmt(w.sscal)}</span></div>
+      <div class="ps-row"><label>Pag-IBIG Salary Loan</label><span style="color:var(--red)">${fmt(w.psl)}</span></div>
+      <div class="ps-row"><label>Pag-IBIG Calamity Loan</label><span style="color:var(--red)">${fmt(w.pcal)}</span></div>
+      <div class="ps-row" style="font-weight:700;color:var(--red)"><label>Total Deductions</label><span>${fmt(c.deductions)}</span></div>
+    </div>
+    <div style="height:1px;background:var(--border)"></div>
+    <div class="ps-total-bar"><span>NET PAY</span><span style="color:var(--green)">${fmt(c.net)}</span></div>
+    <div style="padding:12px 16px;font-size:10px;color:var(--muted);text-align:center">Approved by: JOEVISER R. AUSTRIA</div>`;
+}
+
+// ═══════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════
+function savePeriodToHistory() {
+  const pk  = currentPeriodKey();
+  const act = activeEmps().filter(e => getWage(e.id, pk));
+  if (!act.length) { alert('No wage entries for this period to save.'); return; }
+  const exists = history.find(h => h.periodKey === pk);
+  if (exists && !confirm(`Period "${currentPeriodLabel}" already saved. Overwrite?`)) return;
+  if (exists) history.splice(history.indexOf(exists), 1);
+
+  let totE=0,totN=0,totD=0;
+  const rows = act.map(emp => {
+    const w = getWage(emp.id, pk);
+    const c = calcWage(emp, w);
+    totE+=c.earnings; totN+=c.net; totD+=c.deductions;
+    return { name:emp.name, position:emp.position, rate:emp.rate, days:w.days, earnings:c.earnings, deductions:c.deductions, net:c.net };
+  });
+  history.push({ label:currentPeriodLabel, date:currentPeriodDate, periodKey:pk, rows, totals:{earnings:totE,net:totN,deductions:totD} });
+
+  // ── Post credits to the deduction ledger for every deduction applied this period ──
+  // Map: wage entry field → ledger deduction type
+  const FIELD_TO_TYPE = { ssl:'SSL', sscal:'SSCAL', psl:'PSL', pcal:'PCAL', phic:'PHIC', pagibig:'PAGIBIG', sss:'SSS', ca:'CA' };
+  let creditCount = 0;
+  act.forEach(emp => {
+    const w = getWage(emp.id, pk);
+    if (!w) return;
+    Object.entries(FIELD_TO_TYPE).forEach(([field, type]) => {
+      const amount = parseFloat(w[field]) || 0;
+      if (amount <= 0) return;
+      // Avoid double-posting: check if a credit for this emp+type+period already exists
+      const alreadyPosted = deductionLedger.some(r =>
+        r.empId === emp.id && r.type === type &&
+        r.particular === `DEDUCT – ${currentPeriodLabel}` &&
+        r.credit === amount
+      );
+      if (alreadyPosted) return;
+      deductionLedger.push({
+        id: uid(),
+        empId: emp.id,
+        type,
+        date: currentPeriodDate,
+        particular: `DEDUCT – ${currentPeriodLabel}`,
+        charge: 0,
+        credit: amount,
+      });
+      creditCount++;
+    });
+  });
+
+  save();
+  // Refresh every tab so balances, wages, dashboard are all up to date
+  renderReports();
+  renderDeductions();
+  renderWages();
+  renderDashboard();
+  renderPayslips();
+
+  const creditNote = creditCount > 0 ? `\n${creditCount} deduction${creditCount!==1?'s':''} credited to balances.` : '';
+  alert(`✓ Saved "${currentPeriodLabel}" to history.${creditNote}`);
+}
+
+function setSort(dir, el) {
+  sortDir = dir;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderReports();
+}
+
+function renderReports() {
+  const sorted = [...history].sort((a,b) => {
+    const da=new Date(a.date||'1970'), db=new Date(b.date||'1970');
+    return sortDir==='newest' ? db-da : da-db;
+  });
+  if (!sorted.length) {
+    document.getElementById('report-list').innerHTML = `<div class="empty"><div class="empty-icon">📊</div>No saved periods yet.<br>Go to the <strong style="color:var(--gold)">Wages</strong> tab, enter your data,<br>then tap <strong style="color:var(--gold)">💾 Save Period</strong> here.</div>`;
+    return;
+  }
+  document.getElementById('report-list').innerHTML = sorted.map((h,gi) => {
+    const rows = h.rows.map(r => `
+      <tr>
+        <td>${r.name}</td>
+        <td style="color:var(--muted)">${r.position}</td>
+        <td style="text-align:center">${r.days}</td>
+        <td style="text-align:right;color:var(--gold)">${fmt(r.earnings)}</td>
+        <td style="text-align:right;color:var(--red)">${fmt(r.deductions)}</td>
+        <td style="text-align:right;color:var(--green);font-weight:700">${fmt(r.net)}</td>
+      </tr>`).join('');
+    return `<div class="pg">
+      <div class="pg-hdr" onclick="togglePG(${gi})">
+        <div>
+          <div class="pg-title">${h.label}</div>
+          <div class="pg-meta">${h.rows.length} employees · Net: <span style="color:var(--green)">${fmt(h.totals.net)}</span></div>
+        </div>
+        <span style="color:var(--muted);font-size:20px;transition:transform .2s" id="pg-arr-${gi}">›</span>
+      </div>
+      <div class="pg-body" id="pg-body-${gi}">
+        <div style="overflow-x:auto;padding-top:4px">
+          <table class="rpt-tbl">
+            <thead><tr>
+              <th>Name</th><th>Position</th><th style="text-align:center">Days</th>
+              <th style="text-align:right">Earnings</th><th style="text-align:right">Deduct.</th><th style="text-align:right">Net</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr>
+              <td colspan="3">TOTAL</td>
+              <td style="text-align:right;color:var(--gold)">${fmt(h.totals.earnings)}</td>
+              <td style="text-align:right;color:var(--red)">${fmt(h.totals.deductions)}</td>
+              <td style="text-align:right;color:var(--green)">${fmt(h.totals.net)}</td>
+            </tr></tfoot>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:flex-end;padding-top:10px">
+          <button class="btn-sm" style="color:var(--red);border-color:rgba(240,82,82,.3)" onclick="delHistoryEntry(${gi})">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePG(gi) {
+  const body  = document.getElementById('pg-body-' + gi);
+  const arrow = document.getElementById('pg-arr-' + gi);
+  const open  = body.classList.toggle('open');
+  arrow.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+function delHistoryEntry(gi) {
+  const sorted = [...history].sort((a,b) => {
+    const da=new Date(a.date||'1970'), db=new Date(b.date||'1970');
+    return sortDir==='newest' ? db-da : da-db;
+  });
+  const h = sorted[gi];
+  if (!confirm(`Delete report for "${h.label}"?`)) return;
+  history = history.filter(x => x.periodKey !== h.periodKey);
+  save(); renderReports();
+}
+
+// ═══════════════════════════════════════════════
+// PERIOD MODAL
+// ═══════════════════════════════════════════════
+function openPeriodModal() {
+  document.getElementById('pm-label').value = currentPeriodLabel;
+  document.getElementById('pm-date').value  = currentPeriodDate;
+  document.getElementById('period-modal').style.display = 'flex';
+}
+function closePeriodModal() { document.getElementById('period-modal').style.display='none'; }
+function savePeriod() {
+  const v = document.getElementById('pm-label').value.trim();
+  const d = document.getElementById('pm-date').value;
+  if (v) currentPeriodLabel = v;
+  if (d) currentPeriodDate  = d;
+  wageDetailOpen = {};
+  save(); closePeriodModal(); renderDashboard();
+  setPeriodChip();
+}
+function setPeriodChip() {
+  const lbl = currentPeriodLabel;
+  document.getElementById('period-chip-lbl').textContent = lbl.length > 15 ? lbl.slice(0,15)+'…' : lbl;
+}
+
+// ═══════════════════════════════════════════════
+// SHARED DELETE MODAL
+// ═══════════════════════════════════════════════
+function closeDelModal() { document.getElementById('del-modal').style.display='none'; delAction=null; }
+function confirmDel() { if(delAction) delAction(); closeDelModal(); }
+
+// ═══════════════════════════════════════════════
+// DEDUCTIONS / BALANCES
+// ═══════════════════════════════════════════════
+
+const DED_TYPES = {
+  SSL:    'SSS Salary Loan',
+  SSCAL:  'SSS Calamity Loan',
+  PSL:    'Pag-IBIG Salary Loan',
+  PCAL:   'Pag-IBIG Calamity Loan',
+  PHIC:   'PhilHealth',
+  PAGIBIG:'Pag-IBIG Contribution',
+  SSS:    'SSS Contribution',
+  CA:     'Cash Advance',
+};
+const DED_FIELD = { SSL:'ssl', SSCAL:'sscal', PSL:'psl', PCAL:'pcal', PHIC:'phic', PAGIBIG:'pagibig', SSS:'sss', CA:'ca' };
+
+let dedFilter      = 'ALL';
+let dedOpenCards   = {};   // empId → true if card is expanded
+let ledgerContext  = null; // {empId, type} for "add entry from ledger"
+
+// Running balance for one employee + type
+function getBalance(empId, type) {
+  return deductionLedger
+    .filter(r => r.empId === empId && r.type === type)
+    .reduce((b, r) => b + (r.charge||0) - (r.credit||0), 0);
+}
+
+function getEmployeeBalances(empId) {
+  return Object.keys(DED_TYPES)
+    .map(t => ({ type:t, label:DED_TYPES[t], balance:getBalance(empId,t) }))
+    .filter(b => b.balance > 0);
+}
+
+function setDedFilter(type, el) {
+  dedFilter = type;
+  document.querySelectorAll('.ded-chip').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderDeductions();
+}
+
+function renderDeductions() {
+  const list = document.getElementById('ded-list');
+  const act  = employees.filter(e => e.status === 'active');
+
+  // Build: group all entries by empId, then by type
+  const empGroups = act.map(emp => {
+    const types = Object.keys(DED_TYPES).filter(t => {
+      if (dedFilter !== 'ALL' && dedFilter !== t) return false;
+      return deductionLedger.some(r => r.empId === emp.id && r.type === t);
+    });
+    if (!types.length) return null;
+    return { emp, types };
+  }).filter(Boolean);
+
+  if (!empGroups.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">💳</div>No balance records yet.<br>Tap <strong style="color:var(--gold)">+ Add Record</strong> to get started.</div>`;
+    return;
+  }
+
+  list.innerHTML = empGroups.map(({ emp, types }) => {
+    const totalBal = types.reduce((s, t) => s + getBalance(emp.id, t), 0);
+    const open     = !!dedOpenCards[emp.id];
+
+    const typeSections = types.map(type => {
+      const entries = deductionLedger.filter(r => r.empId === emp.id && r.type === type);
+      let runBal = 0;
+      const rows = entries.map(r => {
+        runBal += (r.charge||0) - (r.credit||0);
+        const balColor = runBal > 0 ? 'var(--red)' : runBal < 0 ? 'var(--green)' : 'var(--muted)';
+        return `<tr data-id="${r.id}">
+          <td style="color:var(--muted);white-space:nowrap">${r.date||'—'}</td>
+          <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.particular||'—'}</td>
+          <td style="text-align:right;color:var(--red);white-space:nowrap">${r.charge ? fmt(r.charge) : '—'}</td>
+          <td style="text-align:right;color:var(--green);white-space:nowrap">${r.credit ? fmt(r.credit) : '—'}</td>
+          <td style="text-align:right;font-family:var(--fh);font-weight:700;color:${balColor};white-space:nowrap">${fmt(runBal)}</td>
+          <td style="text-align:right;white-space:nowrap">
+            <button onclick="openEditDedEntry('${r.id}')"
+              style="background:rgba(61,126,255,.15);border:none;color:var(--blue);cursor:pointer;font-size:10px;font-family:var(--fh);font-weight:700;padding:3px 8px;border-radius:5px;margin-right:3px">Edit</button>
+            <button onclick="deleteDedEntry('${r.id}')"
+              style="background:rgba(240,82,82,.12);border:none;color:var(--red);cursor:pointer;font-size:10px;font-family:var(--fh);font-weight:700;padding:3px 8px;border-radius:5px">Del</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+      const typeBal      = getBalance(emp.id, type);
+      const typeBalColor = typeBal > 0 ? 'var(--red)' : typeBal < 0 ? 'var(--green)' : 'var(--muted)';
+
+      return `
+        <div style="border-top:1px solid var(--border)">
+          <!-- type sub-header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface2)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="ded-type-tag">${DED_TYPES[type]}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-family:var(--fh);font-weight:800;font-size:14px;color:${typeBalColor}">${fmt(typeBal)}</span>
+              <button onclick="openAddDedEntry('${emp.id}','${type}')"
+                style="background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.25);border-radius:6px;color:var(--gold);font-size:10px;font-family:var(--fh);font-weight:700;padding:4px 9px;cursor:pointer">+ Entry</button>
+            </div>
+          </div>
+          <!-- ledger table -->
+          <div style="overflow-x:auto">
+            <table class="ded-tbl">
+              <thead><tr>
+                <th>Date</th><th>Particular</th>
+                <th style="text-align:right;color:var(--red)">Charge ₱</th>
+                <th style="text-align:right;color:var(--green)">Credit ₱</th>
+                <th style="text-align:right">Balance</th>
+                <th></th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }).join('');
+
+    const balColor = totalBal > 0 ? 'var(--red)' : totalBal < 0 ? 'var(--green)' : 'var(--muted)';
+
+    return `
+      <div class="ded-emp-card">
+        <!-- employee header -->
+        <div class="ded-emp-hdr" onclick="toggleDedCard('${emp.id}')">
+          <div class="dir-avatar ${emp.avatarClass}" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:13px;flex-shrink:0">${initials(emp.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:var(--fh);font-weight:700;font-size:14px">${emp.name}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${emp.position} · ${types.length} deduction type${types.length!==1?'s':''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="text-align:right">
+              <div style="font-size:9px;color:var(--muted);margin-bottom:2px">Total Balance</div>
+              <div style="font-family:var(--fh);font-weight:800;font-size:16px;color:${balColor}">${fmt(totalBal)}</div>
+            </div>
+            <span style="color:var(--muted);font-size:18px;transition:transform .2s;display:block;transform:rotate(${open?90:0}deg)" id="ded-arr-${emp.id}">›</span>
+          </div>
+        </div>
+        <!-- expandable type sections -->
+        <div class="ded-emp-body ${open?'open':''}" id="ded-body-${emp.id}">
+          ${typeSections}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleDedCard(empId) {
+  dedOpenCards[empId] = !dedOpenCards[empId];
+  const body  = document.getElementById('ded-body-' + empId);
+  const arrow = document.getElementById('ded-arr-'  + empId);
+  if (!body) return;
+  body.classList.toggle('open', dedOpenCards[empId]);
+  if (arrow) arrow.style.transform = dedOpenCards[empId] ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+// Inline cell edit — update a ledger field in place and re-render
+function updateDedField(id, field, val) {
+  const idx = deductionLedger.findIndex(r => r.id === id);
+  if (idx < 0) return;
+  deductionLedger[idx][field] = val;
+  save();
+  // Re-render only the balance column without full re-render to avoid losing focus
+  renderDeductions();
+}
+
+// ── Add record modal ──
+function openDedEmpModal() {
+  ledgerContext = null;
+  document.getElementById('ded-modal-title').textContent = 'Add Balance Record';
+  const sel = document.getElementById('ded-emp-id');
+  sel.innerHTML = '<option value="">— Select employee —</option>' +
+    employees.filter(e => e.status === 'active').map(e =>
+      `<option value="${e.id}">${e.name}</option>`).join('');
+  sel.value = '';
+  document.getElementById('ded-type').value    = 'SSL';
+  document.getElementById('ded-date').value    = new Date().toISOString().slice(0,10);
+  document.getElementById('ded-particular').value = '';
+  document.getElementById('ded-charge').value  = '';
+  document.getElementById('ded-credit').value  = '';
+  document.getElementById('ded-balance-preview').style.display = 'none';
+  document.getElementById('ded-modal').style.display = 'flex';
+}
+
+function openAddDedEntry(empId, type) {
+  openDedEmpModal();
+  document.getElementById('ded-emp-id').value = empId;
+  document.getElementById('ded-type').value   = type;
+  dedOpenCards[empId] = true;
+  dedPreview();
+}
+
+function openAddDedEntryFromLedger() {
+  if (!ledgerContext) return;
+  closeLedgerModal();
+  openAddDedEntry(ledgerContext.empId, ledgerContext.type);
+}
+
+function openDeductThisPeriod(empId, type, balance) {
+  openAddDedEntry(empId, type);
+  document.getElementById('ded-particular').value = `DEDUCT – ${currentPeriodLabel}`;
+  document.getElementById('ded-credit').value     = balance.toFixed(2);
+  dedPreview();
+}
+
+function closeDedModal() { document.getElementById('ded-modal').style.display = 'none'; }
+
+function dedPreview() {
+  const empId  = document.getElementById('ded-emp-id').value;
+  const type   = document.getElementById('ded-type').value;
+  const charge = parseFloat(document.getElementById('ded-charge').value) || 0;
+  const credit = parseFloat(document.getElementById('ded-credit').value) || 0;
+  const el     = document.getElementById('ded-balance-preview');
+  if (!empId || !type) { el.style.display='none'; return; }
+  const current = getBalance(empId, type);
+  const after   = current + charge - credit;
+  const ac = after > 0 ? 'var(--red)' : after < 0 ? 'var(--green)' : 'var(--muted)';
+  el.style.display = 'block';
+  document.getElementById('dbp-current').textContent = fmt(current);
+  document.getElementById('dbp-current').style.color = current > 0 ? 'var(--red)' : 'var(--muted)';
+  document.getElementById('dbp-after').textContent   = fmt(after);
+  document.getElementById('dbp-after').style.color   = ac;
+}
+
+function saveDedEntry() {
+  const empId      = document.getElementById('ded-emp-id').value;
+  const type       = document.getElementById('ded-type').value;
+  const date       = document.getElementById('ded-date').value;
+  const particular = document.getElementById('ded-particular').value.trim() || '—';
+  const charge     = parseFloat(document.getElementById('ded-charge').value) || 0;
+  const credit     = parseFloat(document.getElementById('ded-credit').value) || 0;
+  if (!empId)             { alert('Select an employee'); return; }
+  if (!charge && !credit) { alert('Enter a charge or credit amount'); return; }
+  deductionLedger.push({ id:uid(), empId, type, date, particular, charge, credit });
+  dedOpenCards[empId] = true;
+  save(); closeDedModal(); renderDeductions();
+}
+
+function deleteDedEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  deductionLedger = deductionLedger.filter(r => r.id !== id);
+  save(); renderDeductions();
+}
+
+// ── Edit ledger entry modal ──
+let dedEditId = null;
+
+function openEditDedEntry(id) {
+  const r = deductionLedger.find(e => e.id === id);
+  if (!r) return;
+  dedEditId = id;
+  const emp  = employees.find(e => e.id === r.empId);
+  document.getElementById('ded-edit-context').textContent = `${emp?.name} · ${DED_TYPES[r.type]}`;
+  document.getElementById('dee-date').value      = r.date      || '';
+  document.getElementById('dee-particular').value= r.particular|| '';
+  document.getElementById('dee-charge').value    = r.charge    || '';
+  document.getElementById('dee-credit').value    = r.credit    || '';
+  dedEditPreview();
+  document.getElementById('ded-edit-modal').style.display = 'flex';
+}
+
+function dedEditPreview() {
+  const r = deductionLedger.find(e => e.id === dedEditId);
+  if (!r) return;
+  // Balance before this entry = sum of all entries before it
+  const entries = deductionLedger.filter(e => e.empId === r.empId && e.type === r.type);
+  const idx     = entries.findIndex(e => e.id === dedEditId);
+  const balBefore = entries.slice(0, idx).reduce((b, e) => b + (e.charge||0) - (e.credit||0), 0);
+  const newCharge = parseFloat(document.getElementById('dee-charge').value) || 0;
+  const newCredit = parseFloat(document.getElementById('dee-credit').value) || 0;
+  const balAfter  = balBefore + newCharge - newCredit;
+  const bc = balAfter > 0 ? 'var(--red)' : balAfter < 0 ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('dee-prev-before').textContent = fmt(balBefore);
+  document.getElementById('dee-prev-after').textContent  = fmt(balAfter);
+  document.getElementById('dee-prev-after').style.color  = bc;
+  document.getElementById('dee-preview').style.display   = 'block';
+}
+
+function closeDedEditModal() { document.getElementById('ded-edit-modal').style.display = 'none'; dedEditId = null; }
+
+function saveDedEditEntry() {
+  const charge = parseFloat(document.getElementById('dee-charge').value) || 0;
+  const credit = parseFloat(document.getElementById('dee-credit').value) || 0;
+  if (!charge && !credit) { alert('Enter a charge or credit amount'); return; }
+  const idx = deductionLedger.findIndex(e => e.id === dedEditId);
+  if (idx < 0) return;
+  deductionLedger[idx] = {
+    ...deductionLedger[idx],
+    date:       document.getElementById('dee-date').value,
+    particular: document.getElementById('dee-particular').value.trim() || '—',
+    charge, credit,
+  };
+  save(); closeDedEditModal(); renderDeductions();
+}
+
+// ── Ledger view modal (now just a quick balance summary — full editing is inline) ──
+function openLedger(empId, type) {
+  ledgerContext = { empId, type };
+  const emp     = employees.find(e => e.id === empId);
+  const entries = deductionLedger.filter(r => r.empId === empId && r.type === type);
+  const bal     = getBalance(empId, type);
+  const bc      = bal > 0 ? 'var(--red)' : bal < 0 ? 'var(--green)' : 'var(--muted)';
+  document.getElementById('ledger-modal-title').textContent = DED_TYPES[type];
+  document.getElementById('ledger-modal-sub').textContent   = emp?.name;
+  document.getElementById('ledger-bal-val').textContent     = fmt(bal);
+  document.getElementById('ledger-bal-val').style.color     = bc;
+  // Show summary table
+  let run = 0;
+  const rows = entries.map(r => {
+    run += (r.charge||0) - (r.credit||0);
+    const rc = run > 0 ? 'var(--red)' : 'var(--green)';
+    return `<tr>
+      <td style="color:var(--muted)">${r.date||'—'}</td>
+      <td>${r.particular||'—'}</td>
+      <td style="text-align:right;color:var(--red)">${r.charge ? fmt(r.charge) : '—'}</td>
+      <td style="text-align:right;color:var(--green)">${r.credit ? fmt(r.credit) : '—'}</td>
+      <td style="text-align:right;font-weight:700;color:${rc}">${fmt(run)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('ledger-modal-body').innerHTML = entries.length
+    ? `<div style="overflow-x:auto"><table class="ded-tbl">
+        <thead><tr>
+          <th>Date</th><th>Particular</th>
+          <th style="text-align:right;color:var(--red)">Charge</th>
+          <th style="text-align:right;color:var(--green)">Credit</th>
+          <th style="text-align:right">Balance</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+       </table></div>`
+    : `<div class="empty" style="padding:20px">No entries yet.</div>`;
+  document.getElementById('ledger-modal').style.display = 'flex';
+}
+function closeLedgerModal() { document.getElementById('ledger-modal').style.display='none'; }
+
+// ── Deduction Prompt after bio import ──
+let dedPromptData = [];
+
+function buildDedPrompt(matchedEmpIds) {
+  dedPromptData = [];
+  matchedEmpIds.forEach(empId => {
+    getEmployeeBalances(empId).forEach(b => {
+      dedPromptData.push({ empId, type:b.type, label:b.label, balance:b.balance, field:DED_FIELD[b.type], suggested:b.balance });
+    });
+  });
+  return dedPromptData.length > 0;
+}
+
+function showDedPromptModal() {
+  const getEmp = id => employees.find(e => e.id === id);
+  document.getElementById('ded-prompt-list').innerHTML = dedPromptData.map((d, i) => {
+    const e = getEmp(d.empId);
+    return `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-family:var(--fh);font-weight:700;font-size:13px">${e?.name}</div>
+            <div class="ded-type-tag" style="margin-top:4px">${d.label}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:var(--muted)">Remaining Balance</div>
+            <div style="font-family:var(--fh);font-weight:800;font-size:17px;color:var(--red)">${fmt(d.balance)}</div>
+          </div>
+        </div>
+        <div>
+          <label class="fl">Deduct this period (₱)</label>
+          <input class="fi" type="number" min="0" max="${d.balance}"
+            value="${d.suggested.toFixed(2)}"
+            oninput="dedPromptData[${i}].suggested=parseFloat(this.value)||0"
+            style="font-size:16px;font-weight:700;text-align:right" />
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('ded-prompt-modal').style.display = 'flex';
+}
+
+function closeDedPromptModal() { document.getElementById('ded-prompt-modal').style.display='none'; dedPromptData=[]; }
+
+function applyDedPrompt() {
+  const pk = currentPeriodKey();
+  let applied = 0;
+  dedPromptData.forEach(d => {
+    if (!d.suggested || d.suggested <= 0) return;
+    const idx = wageEntries.findIndex(w => w.empId===d.empId && w.periodKey===pk);
+    if (idx < 0) return;
+    wageEntries[idx][d.field] = (wageEntries[idx][d.field]||0) + d.suggested;
+    deductionLedger.push({ id:uid(), empId:d.empId, type:d.type, date:currentPeriodDate,
+      particular:`DEDUCT – ${currentPeriodLabel}`, charge:0, credit:d.suggested });
+    applied++;
+  });
+  save(); closeDedPromptModal(); renderWages(); renderDashboard();
+  if (applied) alert(`✅ ${applied} deduction${applied!==1?'s':''} applied to wage entries.`);
+}
+
+// ═══════════════════════════════════════════════
+// BIOMETRIC IMPORT  (Att.log report — daily rows)
+// ═══════════════════════════════════════════════
+
+let bioRaw    = null;  // { dateNums[], year, month, employees: [{bioName, cells[]}] }
+let bioParsed = [];    // computed per-employee after date filter applied
+
+// ── constants (adjust to match your work schedule) ──
+const BIO_START_H  = 7, BIO_START_M  = 30;  // 7:30 morning session start
+const BIO_END_H    = 17, BIO_END_M   = 0;   // 17:00 afternoon session end
+
+function toMin(h, m) { return h * 60 + m; }
+const WORK_START = toMin(BIO_START_H, BIO_START_M);  // used for OT base check
+const WORK_END   = toMin(BIO_END_H,   BIO_END_M);
+
+// ── parseTimeCell: handles concatenated format "07:2617:00" or "07:26" ──
+// The biometric report merges time-in and time-out into a single string.
+// e.g. "07:2617:00" → in=07:26, out=17:00
+//      "07:28"      → in=07:28, out=null  (no clock-out)
+//      "07:2707:2717:00" → multiple punches; use first as in, last as out
+function parseTimeCell(cell) {
+  if (!cell) return { in: null, out: null };
+  const s = String(cell).trim();
+  if (!s || s.toLowerCase() === 'absent') return { in: null, out: null };
+  // Extract all HH:MM patterns
+  const times = s.match(/\d{2}:\d{2}/g) || [];
+  if (times.length === 0) return { in: null, out: null };
+  return { in: times[0], out: times.length > 1 ? times[times.length - 1] : null };
+}
+
+function cellToMin(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// ── file handler ──
+function handleBioFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb   = XLSX.read(data, { type: 'array' });
+      const logName = wb.SheetNames.find(n =>
+        n.toLowerCase().includes('att.log') || n.toLowerCase().includes('att log') || n.toLowerCase().includes('log report'));
+      if (!logName) {
+        alert('Could not find the "Att.log report" sheet.\nSheets found: ' + wb.SheetNames.join(', '));
+        return;
+      }
+      parseLogSheet(XLSX.utils.sheet_to_json(wb.Sheets[logName], { header: 1, defval: null }));
+    } catch(err) {
+      alert('Error reading file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── parse the Att.log report rows into bioRaw ──
+//
+// Real file structure (zero-indexed rows):
+//   Row 0: "Attendance Record Report"
+//   Row 2: col0="Att. Time", col2="2026-04-30 ~ 2026-05-15"   ← date range
+//   Row 3: [30, 1, 2, 3, 4, ..., 15]  ← calendar day numbers (may span 2 months)
+//   Row 4+: alternating ID rows and time rows
+//     ID row:   col0="ID:", col2=empID, col10=empName
+//     Time row: col0..colN = time strings for each day (same col index as row 3)
+//               e.g. "07:2617:00" = in 07:26 out 17:00
+//               e.g. "07:28"      = in 07:28, no out
+//               null/undefined    = absent
+//   Note: if employee has zero attendance, the time row may be entirely empty
+//         or the next row is already another ID row.
+//
+function parseLogSheet(rows) {
+  // ── Step 1: find date range ──
+  // Search rows 0–5 for the "YYYY-MM-DD ~ YYYY-MM-DD" pattern
+  let dateMatch = null;
+  for (let r = 0; r <= 5; r++) {
+    const row = rows[r] || [];
+    for (let c = 0; c < row.length; c++) {
+      const v = String(row[c] || '');
+      const m = v.match(/(\d{4}-\d{2}-\d{2})\s*~\s*(\d{4}-\d{2}-\d{2})/);
+      if (m) { dateMatch = m; break; }
+    }
+    if (dateMatch) break;
+  }
+  if (!dateMatch) {
+    alert('Could not read date range from Att.log report.\nExpected format: "YYYY-MM-DD ~ YYYY-MM-DD".');
+    return;
+  }
+
+  // Parse as local noon to avoid timezone rollover
+  const fromDate = new Date(dateMatch[1] + 'T12:00:00');
+  const toDate   = new Date(dateMatch[2] + 'T12:00:00');
+
+  // ── Step 2: find the day-numbers row ──
+  // It's the first row where col0 is a number (the first calendar day)
+  let dayNumRowIdx = -1;
+  for (let r = 2; r <= 6; r++) {
+    const row = rows[r] || [];
+    if (row[0] !== null && row[0] !== undefined && !isNaN(Number(row[0])) && Number(row[0]) > 0) {
+      dayNumRowIdx = r;
+      break;
+    }
+  }
+  if (dayNumRowIdx < 0) {
+    alert('Could not find the day-number row in Att.log report.');
+    return;
+  }
+
+  // Collect column indices that have valid day numbers, preserving column position
+  const dayRow  = rows[dayNumRowIdx] || [];
+  // Find how many columns have data (stop at first long run of nulls)
+  let maxCol = 0;
+  for (let c = 0; c < dayRow.length; c++) {
+    if (dayRow[c] !== null && dayRow[c] !== undefined && !isNaN(Number(dayRow[c])) && Number(dayRow[c]) > 0) {
+      maxCol = c;
+    }
+  }
+  const numCols = maxCol + 1;
+
+  // Build Date objects: fromDate + 0, fromDate + 1, ... for each column
+  // (column index maps directly to consecutive calendar dates)
+  const dateObjs = [];
+  for (let ci = 0; ci < numCols; ci++) {
+    const d = new Date(fromDate);
+    d.setDate(d.getDate() + ci);
+    dateObjs.push(d);
+  }
+
+  // ── Step 3: parse employee blocks ──
+  const empList = [];
+  for (let i = dayNumRowIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row) continue;
+    if (String(row[0] || '').trim() !== 'ID:') continue;
+
+    // Extract employee name — it's at col 10 in your file; fall back to col 8
+    const bioName = String(row[10] || row[8] || row[9] || '').trim();
+    if (!bioName || bioName === 'undefined') continue;
+
+    // The time row is the very next non-null row
+    // But it might be another ID: row if this emp has no data at all
+    let timeRow = [];
+    const nextRow = rows[i + 1] || [];
+    const nextIsId = String(nextRow[0] || '').trim() === 'ID:';
+    if (!nextIsId) {
+      timeRow = nextRow;
+      i++; // consume the time row
+    }
+
+    // Map column index → time cell value
+    const cells = [];
+    for (let ci = 0; ci < numCols; ci++) {
+      cells.push(timeRow[ci] ?? null);
+    }
+
+    empList.push({ bioName, cells });
+  }
+
+  if (!empList.length) {
+    alert('No employee rows found in the Att.log report sheet.\nMake sure you are importing the correct "Att.log report" sheet.');
+    return;
+  }
+
+  bioRaw = { dateObjs, fromDate, toDate, employees: empList, numCols };
+  showDateRangeModal();
+}
+
+// ── date range selection modal ──
+function showDateRangeModal() {
+  const { fromDate, toDate, dateObjs } = bioRaw;
+
+  const fmtOpt = d => d.toLocaleDateString('en-PH', { month:'short', day:'numeric', weekday:'short' });
+  const opts = dateObjs.map((d, ci) =>
+    `<option value="${ci}">${fmtOpt(d)} (${d.getDate()})</option>`
+  ).join('');
+
+  document.getElementById('bio-date-from-sel').innerHTML = opts;
+  document.getElementById('bio-date-to-sel').innerHTML   = opts;
+
+  // Default: all columns selected
+  document.getElementById('bio-date-from-sel').value = 0;
+  document.getElementById('bio-date-to-sel').value   = dateObjs.length - 1;
+
+  // Show file range label
+  const fmtD = d => d.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('bio-file-range').textContent = `File covers: ${fmtD(fromDate)} – ${fmtD(toDate)}`;
+
+  document.getElementById('bio-date-modal').style.display = 'flex';
+}
+
+function closeDateModal() { document.getElementById('bio-date-modal').style.display = 'none'; }
+
+function applyDateRange() {
+  const fromIdx = parseInt(document.getElementById('bio-date-from-sel').value);
+  const toIdx   = parseInt(document.getElementById('bio-date-to-sel').value);
+  if (fromIdx > toIdx) { alert('Start date must be before or equal to end date.'); return; }
+  closeDateModal();
+  computeBioParsed(fromIdx, toIdx);
+  showBioBanner();
+}
+
+// ── work schedule: two sessions ──
+// Morning  : 07:30 – 11:30  (4 hrs)
+// Lunch    : 11:30 – 13:00  (no penalty)
+// Afternoon: 13:00 – 17:00  (4 hrs)
+const AM_START   = toMin( 7, 30);
+const AM_END     = toMin(11, 30);
+const PM_START   = toMin(13,  0);
+const PM_END     = toMin(17,  0);   // = WORK_END
+const LUNCH_START= toMin(11, 30);
+const LUNCH_END  = toMin(13,  0);
+
+// Returns undertime minutes for one day using two-session rules
+function calcDayUT(tinM, toutM) {
+  let ut = 0;
+
+  // ── LATE ARRIVAL ──
+  if (tinM > AM_START && tinM < LUNCH_END) {
+    // Arrived during morning session (after 7:30, before 13:00)
+    // Lunch window (11:30–13:00) is not late — cap late at AM_END
+    ut += Math.min(tinM, AM_END) - AM_START;
+  } else if (tinM >= LUNCH_END) {
+    // Arrived in the afternoon only — entire morning session is UT
+    ut += AM_END - AM_START;          // full morning missed = 4 hrs
+    // Also late for PM session?
+    if (tinM > PM_START) {
+      ut += tinM - PM_START;
+    }
+  }
+  // Arrived at or before 7:30 → no late penalty
+
+  // ── LEFT EARLY ──
+  if (toutM < PM_END) {
+    if (toutM <= LUNCH_START) {
+      // Left during or before morning session — entire afternoon is UT
+      ut += PM_END - PM_START;        // full afternoon missed = 4 hrs
+    } else if (toutM < LUNCH_END) {
+      // Left during lunch break — no extra penalty (lunch is free)
+      // afternoon fully missed
+      ut += PM_END - PM_START;
+    } else {
+      // Left during afternoon session
+      ut += PM_END - toutM;
+    }
+  }
+  // Left at or after 17:00 → no early-leave penalty
+
+  return ut;
+}
+
+// ── compute per-employee totals within selected date range ──
+function computeBioParsed(fromIdx, toIdx) {
+  const { dateObjs, employees: empList } = bioRaw;
+
+  bioParsed = empList.map(({ bioName, cells }) => {
+    let days = 0, otMins = 0, utMins = 0;
+    const incompleteDays = [];
+
+    dateObjs.forEach((dateObj, ci) => {
+      if (ci < fromIdx || ci > toIdx) return;
+
+      const { in: tin, out: tout } = parseTimeCell(cells[ci]);
+      if (!tin) return; // absent
+
+      const tinM  = cellToMin(tin);
+      const toutM = tout ? cellToMin(tout) : null;
+
+      days++;
+      if (toutM === null) {
+        incompleteDays.push({ dateObj, colIdx: ci, timeIn: tin, manualOut: null });
+        return;
+      }
+
+      const rawOt = Math.max(0, toutM - WORK_END);
+      const ot    = rawOt >= 5 ? rawOt : 0;
+      utMins += calcDayUT(tinM, toutM);
+      otMins += ot;
+    });
+
+    return { bioName, matchedEmpId: fuzzyMatchEmployee(bioName), days, otMins, utMins, fromIdx, toIdx, incompleteDays };
+  });
+}
+
+// ── fuzzy name matcher ──
+function fuzzyMatchEmployee(bioName) {
+  const norm  = s => s.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+  const words = norm(bioName).split(/\s+/).filter(w => w.length > 1);
+  let best = null, bestScore = 0;
+  for (const emp of employees) {
+    if (emp.status !== 'active') continue;
+    const empWords = norm(emp.name).split(/[\s,]+/).filter(Boolean);
+    let score = 0;
+    for (const bw of words) {
+      for (const ew of empWords) {
+        if (ew === bw) score += 3;
+        else if (ew.startsWith(bw) || bw.startsWith(ew)) score += 1;
+      }
+    }
+    if (score > bestScore) { bestScore = score; best = emp.id; }
+  }
+  return bestScore >= 2 ? best : null;
+}
+
+// ── show review banner ──
+function showBioBanner() {
+  if (!bioParsed.length) { alert('No employee data found.'); return; }
+
+  const { dateObjs } = bioRaw;
+  const fromIdx = bioParsed[0].fromIdx, toIdx = bioParsed[0].toIdx;
+  const fmtDay     = d => d.toLocaleDateString('en-PH',{month:'short',day:'numeric'});
+  const fmtDayLong = d => d.toLocaleDateString('en-PH',{month:'short',day:'numeric',weekday:'short'});
+  const rangeLabel = `${fmtDay(dateObjs[fromIdx])} – ${fmtDay(dateObjs[toIdx])}`;
+
+  const totalIncomplete = bioParsed.reduce((s, b) => s + b.incompleteDays.length, 0);
+
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--muted)">${bioParsed.length} employee${bioParsed.length!==1?'s':''} · <span style="color:var(--gold)">${rangeLabel}</span>${totalIncomplete ? `<span style="color:var(--orange)"> · ${totalIncomplete} incomplete</span>` : ''}</div>
+      <button class="btn-sm" style="font-size:10px;color:var(--blue);border-color:rgba(61,126,255,.3)" onclick="showDateRangeModal()">✎ Range</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">`;
+
+  bioParsed.forEach((b, idx) => {
+    const emp        = b.matchedEmpId ? employees.find(e => e.id === b.matchedEmpId) : null;
+    const matchColor = emp ? 'var(--green)' : 'var(--red)';
+    const matchText  = emp ? emp.name : '⚠️ No match — select below';
+    const hasIncomplete = b.incompleteDays.length > 0;
+
+    const opts = '<option value="">— Skip —</option>' +
+      employees.filter(e => e.status === 'active').map(e =>
+        `<option value="${e.id}" ${e.id === b.matchedEmpId ? 'selected' : ''}>${e.name}</option>`
+      ).join('');
+
+    // Incomplete days rows
+    let incompleteHtml = '';
+    if (hasIncomplete) {
+      incompleteHtml = `
+        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+          <div style="font-size:10px;color:var(--orange);font-weight:700;font-family:var(--fh);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">
+            ⚠ ${b.incompleteDays.length} day${b.incompleteDays.length!==1?'s':''} with no log-out — enter time out to include OT/UT
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">`;
+
+      b.incompleteDays.forEach((inc, ii) => {
+        incompleteHtml += `
+          <div style="background:rgba(255,159,67,.07);border:1px solid rgba(255,159,67,.25);border-radius:8px;padding:8px 10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1">
+                <div style="font-size:10px;color:var(--muted)">${fmtDayLong(inc.dateObj)}</div>
+                <div style="font-size:12px;margin-top:2px">In: <span style="color:var(--gold);font-weight:600">${inc.timeIn}</span> · Out: <span style="color:var(--muted)" id="out-lbl-${idx}-${ii}">not logged</span></div>
+              </div>
+              <input type="time" style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:5px 8px;color:var(--text);font-family:var(--fm);font-size:12px;width:100px"
+                id="manual-out-${idx}-${ii}"
+                oninput="updateManualOut(${idx},${ii},this.value)" />
+            </div>
+          </div>`;
+      });
+
+      incompleteHtml += `
+          </div>
+          <button class="btn-sm" style="width:100%;margin-top:8px;color:var(--blue);border-color:rgba(61,126,255,.3);text-align:center" onclick="recalcEmployee(${idx})">↻ Recalculate with entered times</button>
+        </div>`;
+    }
+
+    html += `
+      <div style="background:var(--bg);border:1px solid ${hasIncomplete ? 'rgba(255,159,67,.35)' : 'var(--border)'};border-radius:10px;padding:11px 12px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div>
+            <div style="font-family:var(--fh);font-weight:700;font-size:12px">${b.bioName}</div>
+            <div style="font-size:10px;color:${matchColor};margin-top:2px">${matchText}</div>
+          </div>
+          <div style="text-align:right;font-size:11px;line-height:1.8" id="bio-totals-${idx}">
+            <div style="color:var(--text);font-weight:600">${b.days} days</div>
+            <div style="color:var(--red)">${b.utMins} UT mins</div>
+            <div style="color:var(--green)">${b.otMins} OT mins</div>
+          </div>
+        </div>
+        <select class="fi" style="font-size:12px;padding:7px 10px" onchange="bioParsed[${idx}].matchedEmpId=this.value||null">${opts}</select>
+        ${incompleteHtml}
+      </div>`;
+  });
+
+  html += '</div>';
+  document.getElementById('bio-banner-body').innerHTML = html;
+  document.getElementById('bio-banner').style.display = 'block';
+  document.getElementById('bio-banner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── store manual logout time entered by user ──
+function updateManualOut(empIdx, dayIdx, val) {
+  bioParsed[empIdx].incompleteDays[dayIdx].manualOut = val || null;
+  const lbl = document.getElementById(`out-lbl-${empIdx}-${dayIdx}`);
+  if (lbl) lbl.textContent = val || 'not logged';
+  if (lbl && val) lbl.style.color = 'var(--blue)';
+}
+
+// ── recalculate one employee's totals after manual logout entries ──
+function recalcEmployee(empIdx) {
+  const b   = bioParsed[empIdx];
+  const { dateObjs, employees: empList } = bioRaw;
+  const emp = empList.find(e => e.bioName === b.bioName);
+  if (!emp) return;
+
+  let days = 0, otMins = 0, utMins = 0;
+  const fromIdx = b.fromIdx, toIdx = b.toIdx;
+
+  dateObjs.forEach((dateObj, ci) => {
+    if (ci < fromIdx || ci > toIdx) return;
+
+    const { in: tin, out: tout } = parseTimeCell(emp.cells[ci]);
+    if (!tin) return;
+
+    const tinM = cellToMin(tin);
+    let toutM  = tout ? cellToMin(tout) : null;
+
+    // Check if user filled in a manual logout for this incomplete day
+    const incDay = b.incompleteDays.find(id => id.colIdx === ci);
+    if (incDay && incDay.manualOut) {
+      toutM = cellToMin(incDay.manualOut);
+    }
+
+    days++;
+    if (toutM === null) return;
+
+    const rawOt = Math.max(0, toutM - WORK_END);
+    const ot    = rawOt >= 5 ? rawOt : 0;
+    utMins += calcDayUT(tinM, toutM);
+    otMins += ot;
+  });
+
+  bioParsed[empIdx].days   = days;
+  bioParsed[empIdx].otMins = otMins;
+  bioParsed[empIdx].utMins = utMins;
+
+  const totalsEl = document.getElementById(`bio-totals-${empIdx}`);
+  if (totalsEl) {
+    totalsEl.innerHTML = `
+      <div style="color:var(--text);font-weight:600">${days} days</div>
+      <div style="color:var(--red)">${utMins} UT mins</div>
+      <div style="color:var(--green)">${otMins} OT mins</div>`;
+  }
+}
+
+function closeBioBanner() {
+  document.getElementById('bio-banner').style.display = 'none';
+  bioParsed = [];
+  bioRaw    = null;
+}
+
+// ── write wage entries ──
+function applyBioImport() {
+  const pk = currentPeriodKey();
+  let applied = 0, skipped = 0;
+
+  for (const b of bioParsed) {
+    if (!b.matchedEmpId) { skipped++; continue; }
+    const emp = employees.find(e => e.id === b.matchedEmpId);
+    if (!emp) { skipped++; continue; }
+
+    const otAmt = Math.round((emp.rate / 8) * 1.25 * (b.otMins / 60) * 100) / 100;
+    const utAmt = Math.round((emp.rate / 8) * (b.utMins / 60) * 100) / 100;
+
+    const existing = getWage(b.matchedEmpId, pk);
+    const entry = {
+      empId: b.matchedEmpId, periodKey: pk,
+      days: b.days, otMins: b.otMins, otAmt,
+      holiday: existing?.holiday || 0,
+      utMins: b.utMins, utAmt,
+      pagibig: existing?.pagibig || 0,
+      phic:    existing?.phic    || 0,
+      sss:     existing?.sss     || 0,
+      ca:      existing?.ca      || 0,
+      ssl:     existing?.ssl     || 0,
+      sscal:   existing?.sscal   || 0,
+      psl:     existing?.psl     || 0,
+      pcal:    existing?.pcal    || 0,
+    };
+
+    const idx = wageEntries.findIndex(w => w.empId === b.matchedEmpId && w.periodKey === pk);
+    if (idx >= 0) wageEntries[idx] = entry; else wageEntries.push(entry);
+    applied++;
+  }
+
+  save(); closeBioBanner(); renderWages(); renderDashboard();
+
+  // Check for outstanding balances among matched employees
+  const matchedIds = bioParsed.filter(b => b.matchedEmpId).map(b => b.matchedEmpId);
+  if (buildDedPrompt(matchedIds)) {
+    setTimeout(() => showDedPromptModal(), 400);
+  } else {
+    alert(`✅ Import complete! ${applied} employee${applied !== 1 ? 's' : ''} updated · ${skipped} skipped`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// FIREBASE INIT — runs only after SDK scripts finish loading
+// ═══════════════════════════════════════════════
+
+// Declare auth/db at module scope so all functions below can reference them
+let auth, db;
+
+// ── Current session ──
+let currentUser     = null;
+let currentUserRole = null;
+let currentUserName = '';
+
+// ── Sync state ──
+let syncUnsubscribes = [];
+
+function setSyncDot(state) {
+  const d = el('sync-dot');
+  if (!d || d === _dummy) return;
+  d.className = 'sync-dot' + (state==='syncing' ? ' syncing' : state==='err' ? ' err' : '');
+  d.title = state==='ok' ? 'Synced' : state==='syncing' ? 'Syncing…' : 'Sync error';
+}
+
+// ── Firebase project config (safe to keep here — public keys only) ──
+const firebaseConfig = {
+  apiKey:            "AIzaSyC3VuyEigXFi6eRe8W8zzLx8-jlh7xB6gg",
+  authDomain:        "payslip31b.firebaseapp.com",
+  projectId:         "payslip31b",
+  storageBucket:     "payslip31b.firebasestorage.app",
+  messagingSenderId: "692277262815",
+  appId:             "1:692277262815:web:727d88af5a7e30c0eb6c6a"
+};
+
+// ── Wait for firebase-ready event dispatched by the loader above ──
+document.addEventListener('firebase-ready', function initFirebase() {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db   = firebase.firestore();
+
+  // ── Auth state listener ──
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      try {
+        const snap = await db.collection('users').doc(user.uid).get();
+        if (!snap.exists) {
+          await auth.signOut();
+          showLogin('Account not configured. Contact your administrator.');
+          return;
+        }
+        const data = snap.data();
+        currentUser     = user;
+        currentUserRole = data.role || 'staff';
+        currentUserName = data.name || user.email.split('@')[0];
+        onLoginSuccess();
+      } catch(e) {
+        const code = e.code ? ' [' + e.code + ']' : '';
+        showLogin('Database error' + code + ': ' + e.message);
+      }
+    } else {
+      currentUser     = null;
+      currentUserRole = null;
+      currentUserName = '';
+      showLogin();
+    }
+  });
+});
+
+function showLogin(errMsg) {
+  el('app-loading').style.display  = 'none';
+  el('app-shell').style.display    = 'none';
+  el('login-screen').style.display = 'flex';
+  if (errMsg) { el('login-err').textContent = errMsg; el('login-err').style.display = 'block'; }
+  else el('login-err').style.display = 'none';
+  el('login-btn').innerHTML = 'Sign In';
+  el('login-btn').disabled  = false;
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+  if (!email || !pass) { err.textContent='Enter your email and password.'; err.style.display='block'; return; }
+  err.style.display = 'none';
+  btn.innerHTML = '<span class="login-spinner"></span>Signing in…';
+  btn.disabled  = true;
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    // onAuthStateChanged handles the rest
+  } catch(e) {
+    const friendlyCodes = ['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-email'];
+    const msg = friendlyCodes.includes(e.code)
+      ? 'Incorrect email or password.'
+      : (e.message || 'Sign-in failed') + (e.code ? ' [' + e.code + ']' : '');
+    err.textContent = msg; err.style.display = 'block';
+    btn.innerHTML = 'Sign In'; btn.disabled = false;
+  }
+}
+
+async function doLogout() {
+  closeUserMenu();
+  detachListeners();
+  await auth.signOut();
+}
+
+function onLoginSuccess() {
+  el('app-loading').style.display  = 'none';
+  el('login-screen').style.display = 'none';
+  el('app-shell').style.display    = 'block';
+
+  // Apply role class
+  document.body.classList.toggle('is-admin', currentUserRole === 'admin');
+
+  // Update user chip
+  el('user-chip-role').textContent = currentUserRole;
+  el('user-chip-role').className   = 'user-chip-role role-' + currentUserRole;
+  el('user-chip-name').textContent = currentUserName;
+
+  // Staff: hide branch management pill button
+  if (currentUserRole !== 'admin') {
+    const addBranchBtn = document.querySelector('.branch-pill-add');
+    if (addBranchBtn) addBranchBtn.style.display = 'none';
+  }
+
+  // Load data from Firestore
+  loadBranchData();
+  renderBranchBar();
+  attachFirestoreListeners();
+  renderAll();
+
+  // Load + subscribe to app settings (mode, tab perms)
+  loadAppSettings();
+  attachSettingsListener();
+}
+
+// Real-time listener for settings so staff see tab changes instantly
+let settingsUnsub = null;
+function attachSettingsListener() {
+  if (settingsUnsub) settingsUnsub();
+  settingsUnsub = db.collection('settings').doc('appConfig')
+    .onSnapshot(snap => {
+      if (!snap.exists) return;
+      const d = snap.data();
+      if (d.appMode       !== undefined) appMode       = d.appMode;
+      if (d.staffTabPerms !== undefined) staffTabPerms = { ...staffTabPerms, ...d.staffTabPerms };
+      applyAppMode();
+      applyTabAccess();
+      // Re-render grid if user menu is open
+      if (document.getElementById('user-menu-modal')?.style.display !== 'none') {
+        renderTabAccessGrid();
+      }
+    }, () => { /* silent fail */ });
+  syncUnsubscribes.push(() => { if (settingsUnsub) { settingsUnsub(); settingsUnsub = null; } });
+}
+
+// ═══════════════════════════════════════════════
+// FIRESTORE SYNC
+// Path: /branches/{branchId}/{collection}
+// Collections: employees, wageEntries, deductionLedger, history, meta
+// ═══════════════════════════════════════════════
+function branchCol(col) {
+  return db.collection('branches').doc(activeBranchId).collection(col);
+}
+function branchMeta() {
+  return db.collection('branches').doc(activeBranchId).collection('meta').doc('period');
+}
+function branchesCol() {
+  return db.collection('appConfig').doc('branches');
+}
+
+function detachListeners() {
+  syncUnsubscribes.forEach(u => u());
+  syncUnsubscribes = [];
+}
+
+function attachFirestoreListeners() {
+  detachListeners();
+  setSyncDot('syncing');
+
+  // ── branches config ──
+  syncUnsubscribes.push(
+    branchesCol().onSnapshot(snap => {
+      if (snap.exists) {
+        const data = snap.data();
+        if (data.list) {
+          branches = data.list;
+          localStorage.setItem('31b_branches', JSON.stringify(branches));
+          renderBranchBar();
+        }
+      }
+    }, () => setSyncDot('err'))
+  );
+
+  // ── employees ──
+  syncUnsubscribes.push(
+    branchCol('employees').onSnapshot(snap => {
+      employees = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      localStorage.setItem(branchKey('employees'), JSON.stringify(employees));
+      renderAll();
+      setSyncDot('ok');
+    }, () => setSyncDot('err'))
+  );
+
+  // ── wageEntries ──
+  syncUnsubscribes.push(
+    branchCol('wageEntries').onSnapshot(snap => {
+      wageEntries = snap.docs.map(d => ({...d.data(), _fsId: d.id}));
+      localStorage.setItem(branchKey('wages'), JSON.stringify(wageEntries));
+      renderAll();
+    }, () => setSyncDot('err'))
+  );
+
+  // ── deductionLedger ──
+  syncUnsubscribes.push(
+    branchCol('deductionLedger').onSnapshot(snap => {
+      deductionLedger = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      localStorage.setItem(branchKey('deductions'), JSON.stringify(deductionLedger));
+      renderAll();
+    }, () => setSyncDot('err'))
+  );
+
+  // ── history ──
+  syncUnsubscribes.push(
+    branchCol('history').onSnapshot(snap => {
+      history = snap.docs.map(d => ({...d.data(), _fsId: d.id}));
+      localStorage.setItem(branchKey('history'), JSON.stringify(history));
+      renderReports();
+    }, () => setSyncDot('err'))
+  );
+
+  // ── period meta ──
+  syncUnsubscribes.push(
+    branchMeta().onSnapshot(snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        if (d.label) { currentPeriodLabel = d.label; localStorage.setItem(branchKey('period'), d.label); }
+        if (d.date)  { currentPeriodDate  = d.date;  localStorage.setItem(branchKey('period_date'), d.date); }
+        setPeriodChip();
+        document.getElementById('d-period').textContent = currentPeriodLabel;
+      }
+    }, () => {})
+  );
+}
+
+// ── Override save() to write to Firestore ──
+// Local save() still runs for offline cache; Firestore writes happen here.
+
+async function fsSetEmployee(emp) {
+  setSyncDot('syncing');
+  const {id, ...data} = emp;
+  await branchCol('employees').doc(id).set(data);
+  setSyncDot('ok');
+}
+async function fsDeleteEmployee(id) {
+  setSyncDot('syncing');
+  await branchCol('employees').doc(id).delete();
+  setSyncDot('ok');
+}
+
+async function fsSaveWage(entry) {
+  setSyncDot('syncing');
+  const key = entry.empId + '_' + entry.periodKey.replace(/[^a-zA-Z0-9]/g,'_');
+  const {_fsId, ...data} = entry;
+  await branchCol('wageEntries').doc(key).set(data);
+  setSyncDot('ok');
+}
+async function fsDeleteWage(empId, periodKey) {
+  setSyncDot('syncing');
+  const key = empId + '_' + periodKey.replace(/[^a-zA-Z0-9]/g,'_');
+  await branchCol('wageEntries').doc(key).delete();
+  setSyncDot('ok');
+}
+
+async function fsSaveDedEntry(entry) {
+  setSyncDot('syncing');
+  const {id, ...data} = entry;
+  await branchCol('deductionLedger').doc(id).set(data);
+  setSyncDot('ok');
+}
+async function fsDeleteDedEntry(id) {
+  setSyncDot('syncing');
+  await branchCol('deductionLedger').doc(id).delete();
+  setSyncDot('ok');
+}
+
+async function fsSaveHistory(h) {
+  setSyncDot('syncing');
+  const key = h.periodKey.replace(/[^a-zA-Z0-9]/g,'_');
+  const {_fsId, ...data} = h;
+  await branchCol('history').doc(key).set(data);
+  setSyncDot('ok');
+}
+async function fsDeleteHistory(periodKey) {
+  setSyncDot('syncing');
+  const key = periodKey.replace(/[^a-zA-Z0-9]/g,'_');
+  await branchCol('history').doc(key).delete();
+  setSyncDot('ok');
+}
+
+async function fsSavePeriodMeta() {
+  setSyncDot('syncing');
+  await branchMeta().set({ label: currentPeriodLabel, date: currentPeriodDate });
+  setSyncDot('ok');
+}
+
+async function fsSaveBranches() {
+  setSyncDot('syncing');
+  await branchesCol().set({ list: branches });
+  setSyncDot('ok');
+}
+
+// ── When switching branches, re-attach listeners ──
+const _origSwitchBranch = switchBranch;
+switchBranch = function(id) {
+  activeBranchId = id;
+  saveBranches();
+  loadBranchData();
+  wageDetailOpen = {};
+  dedOpenCards   = {};
+  renderBranchBar();
+  attachFirestoreListeners(); // reattach for new branch
+  renderAll();
+};
+
+// ═══════════════════════════════════════════════
+// USER MENU & MANAGEMENT
+// ═══════════════════════════════════════════════
+function openUserMenu() {
+  const um = document.getElementById('um-avatar');
+  const initArr = currentUserName.split(/\s+/).filter(Boolean);
+  if (um) um.textContent = initArr.slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?';
+  const uname = document.getElementById('um-name');
+  const uemail = document.getElementById('um-email');
+  const urole  = document.getElementById('um-role');
+  if (uname)  uname.textContent  = currentUserName;
+  if (uemail) uemail.textContent = currentUser?.email || '';
+  if (urole)  { urole.textContent = currentUserRole; urole.className = 'pos-badge pill-active role-'+currentUserRole; }
+
+  // Sync mode buttons & label
+  const btnTest = document.getElementById('mode-btn-test');
+  const btnLive = document.getElementById('mode-btn-live');
+  const label   = document.getElementById('um-mode-label');
+  const sub     = document.getElementById('um-mode-sub');
+  if (btnTest) btnTest.className = 'mode-seg-btn' + (appMode==='test' ? ' active-test' : '');
+  if (btnLive) btnLive.className = 'mode-seg-btn' + (appMode==='live' ? ' active-live' : '');
+  if (label)   label.textContent = appMode==='test' ? '🧪 Test Mode' : '⚡ Live Mode';
+  if (sub)     sub.textContent   = appMode==='test'
+    ? "Data is isolated — changes won't affect live records"
+    : 'Saving to production database';
+
+  // Render tab access toggles
+  renderTabAccessGrid();
+
+  document.getElementById('user-menu-modal').style.display = 'flex';
+}
+function closeUserMenu() { document.getElementById('user-menu-modal').style.display = 'none'; }
+
+async function openUserMgmt() {
+  document.getElementById('user-mgmt-modal').style.display = 'flex';
+  document.getElementById('user-mgmt-list').innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px">Loading users…</div>';
+  try {
+    const snap = await db.collection('users').get();
+    const users = snap.docs.map(d => ({uid:d.id, ...d.data()}));
+    document.getElementById('user-mgmt-list').innerHTML = users.length
+      ? users.map(u => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+            <div style="width:34px;height:34px;border-radius:50%;background:rgba(245,197,24,.15);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:12px;color:var(--gold);flex-shrink:0">
+              ${(u.name||u.email||'?').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-family:var(--fh);font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name||'—'}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px">${u.email||''}</div>
+            </div>
+            <span class="pos-badge ${u.role==='admin'?'pill-active':'pill-inactive'}">${u.role||'staff'}</span>
+            ${u.uid !== currentUser?.uid ? `<button onclick="deleteUser('${u.uid}','${(u.name||'').replace(/'/g,'')}')"
+              style="background:rgba(240,82,82,.12);border:none;color:var(--red);cursor:pointer;font-size:10px;font-family:var(--fh);font-weight:700;padding:4px 9px;border-radius:6px;flex-shrink:0">Del</button>` : ''}
+          </div>`)
+        .join('')
+      : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px">No users yet.</div>';
+  } catch(e) {
+    document.getElementById('user-mgmt-list').innerHTML = `<div style="font-size:12px;color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+function closeUserMgmt() { document.getElementById('user-mgmt-modal').style.display = 'none'; }
+
+async function createUser() {
+  if (currentUserRole !== 'admin') return;
+  const name  = document.getElementById('nu-name').value.trim();
+  const email = document.getElementById('nu-email').value.trim();
+  const pass  = document.getElementById('nu-pass').value;
+  const role  = document.getElementById('nu-role').value;
+  const err   = document.getElementById('nu-err');
+  const btn   = document.getElementById('nu-btn');
+  if (!name || !email || !pass) { err.textContent='Fill in all fields.'; err.style.display='block'; return; }
+  if (pass.length < 6)          { err.textContent='Password must be at least 6 characters.'; err.style.display='block'; return; }
+  err.style.display = 'none';
+  btn.textContent = 'Creating…'; btn.disabled = true;
+  try {
+    // Use a secondary app instance so creating a user doesn't sign out the admin
+    const secondary = firebase.initializeApp(firebaseConfig, 'secondary_' + Date.now());
+    const secAuth   = secondary.auth();
+    const cred      = await secAuth.createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({ name, email, role, createdBy: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await secAuth.signOut();
+    secondary.delete();
+    btn.textContent = 'Create User'; btn.disabled = false;
+    ['nu-name','nu-email','nu-pass'].forEach(id => document.getElementById(id).value = '');
+    openUserMgmt(); // refresh list
+  } catch(e) {
+    err.textContent = e.message; err.style.display = 'block';
+    btn.textContent = 'Create User'; btn.disabled = false;
+  }
+}
+
+async function deleteUser(uid, name) {
+  if (!confirm(`Remove account for "${name}"?\nThey will no longer be able to log in.`)) return;
+  try {
+    await db.collection('users').doc(uid).delete();
+    openUserMgmt();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════
+// OVERRIDE DATA-WRITE FUNCTIONS TO ALSO SYNC
+// ═══════════════════════════════════════════════
+
+// ── saveDirEntry (employees) ──
+const _origSaveDirEntry = saveDirEntry;
+saveDirEntry = async function() {
+  const name   = document.getElementById('em-name').value.trim();
+  if (!name) { alert('Enter a name'); return; }
+  const pos    = document.getElementById('em-pos').value.trim() || 'Laborer';
+  const rate   = parseFloat(document.getElementById('em-rate').value) || 0;
+  const status = document.getElementById('em-status').value;
+  if (editDirIndex >= 0) {
+    const old = employees[editDirIndex];
+    const updated = { ...old, name, position:pos, rate, status };
+    employees[editDirIndex] = updated;
+    save();
+    await fsSetEmployee(updated);
+  } else {
+    const av  = AV[employees.length % AV.length];
+    const emp = { id:uid(), name, position:pos, rate, status, avatarClass:av };
+    employees.push(emp);
+    save();
+    await fsSetEmployee(emp);
+  }
+  closeDirModal(); renderDirectory(); renderDashboard();
+};
+
+// ── restoreDir ──
+const _origRestoreDir = restoreDir;
+restoreDir = async function(i) {
+  employees[i].status = 'active';
+  save();
+  await fsSetEmployee(employees[i]);
+  renderDirectory(); renderDashboard();
+};
+
+// ── openDelDir (deactivate) ──
+const _origOpenDelDir = openDelDir;
+openDelDir = function(i) {
+  delAction = async () => {
+    employees[i].status = 'inactive';
+    save();
+    await fsSetEmployee(employees[i]);
+    renderDirectory(); renderDashboard();
+  };
+  document.getElementById('del-title').textContent = 'Deactivate Employee?';
+  document.getElementById('del-msg').textContent   = `"${employees[i].name}" will be marked inactive and removed from payroll. Their historical records are preserved.`;
+  document.getElementById('del-modal').style.display = 'flex';
+};
+
+// ── saveWageEntry ──
+const _origSaveWageEntry = saveWageEntry;
+saveWageEntry = async function() {
+  let empId, pk;
+  if (editWageKey) {
+    empId = editWageKey.empId; pk = editWageKey.periodKey;
+  } else {
+    empId = document.getElementById('wm-emp-id').value;
+    pk    = currentPeriodKey();
+    if (!empId) { alert('Select an employee'); return; }
+  }
+  const entry = {
+    empId, periodKey: pk,
+    days:   parseFloat(document.getElementById('wm-days').value)||0,
+    otMins: parseFloat(document.getElementById('wm-ot-mins').value)||0,
+    otAmt:  parseFloat(document.getElementById('wm-ot-amt').value)||0,
+    holiday:parseFloat(document.getElementById('wm-holiday').value)||0,
+    utMins: parseFloat(document.getElementById('wm-ut-mins').value)||0,
+    utAmt:  parseFloat(document.getElementById('wm-ut-amt').value)||0,
+    pagibig:parseFloat(document.getElementById('wm-pagibig').value)||0,
+    phic:   parseFloat(document.getElementById('wm-phic').value)||0,
+    sss:    parseFloat(document.getElementById('wm-sss').value)||0,
+    ca:     parseFloat(document.getElementById('wm-ca').value)||0,
+    ssl:    parseFloat(document.getElementById('wm-ssl').value)||0,
+    sscal:  parseFloat(document.getElementById('wm-sscal').value)||0,
+    psl:    parseFloat(document.getElementById('wm-psl').value)||0,
+    pcal:   parseFloat(document.getElementById('wm-pcal').value)||0,
+  };
+  const idx = wageEntries.findIndex(w => w.empId===empId && w.periodKey===pk);
+  if (idx >= 0) wageEntries[idx] = entry; else wageEntries.push(entry);
+  save();
+  await fsSaveWage(entry);
+  closeWageModal(); renderWages(); renderDashboard();
+};
+
+// ── confirmAddBalance (inline balance deduction) ──
+const _origConfirmAddBalance = confirmAddBalance;
+confirmAddBalance = async function() {
+  if (!addBalCtx) return;
+  const amount = parseFloat(document.getElementById('add-bal-amount').value) || 0;
+  if (amount < 0) { alert('Amount cannot be negative.'); return; }
+  const idx = wageEntries.findIndex(e => e.empId === addBalCtx.empId && e.periodKey === addBalCtx.pk);
+  if (idx < 0) return;
+
+  // Track previous amount so we can adjust the ledger credit correctly
+  const prevAmount = wageEntries[idx][addBalCtx.field] || 0;
+  wageEntries[idx][addBalCtx.field] = amount;
+
+  // ── Post credit to deductionLedger so the Balances tab reflects this deduction ──
+  // If the field was already set (editing), remove the old auto-credit first
+  if (prevAmount > 0) {
+    const prevCreditLabel = `DEDUCT – ${currentPeriodLabel}`;
+    // Remove the previously auto-posted credit for this emp+type+period
+    const prevIdx = deductionLedger.findIndex(r =>
+      r.empId === addBalCtx.empId &&
+      r.type  === addBalCtx.type  &&
+      r.particular === prevCreditLabel &&
+      r._autoWage === true
+    );
+    if (prevIdx >= 0) {
+      const oldId = deductionLedger[prevIdx].id;
+      deductionLedger.splice(prevIdx, 1);
+      await fsDeleteDedEntry(oldId);
+    }
+  }
+
+  // Post a fresh credit entry if the new amount is > 0
+  const writes = [fsSaveWage(wageEntries[idx])];
+  if (amount > 0) {
+    const creditEntry = {
+      id:         uid(),
+      empId:      addBalCtx.empId,
+      type:       addBalCtx.type,
+      date:       currentPeriodDate,
+      particular: `DEDUCT – ${currentPeriodLabel}`,
+      charge:     0,
+      credit:     amount,
+      _autoWage:  true,   // flag so we can remove it if the user edits the amount again
+    };
+    deductionLedger.push(creditEntry);
+    writes.push(fsSaveDedEntry(creditEntry));
+  }
+
+  save();
+  await Promise.all(writes);
+  closeAddBalModal();
+  renderWages();
+  renderDeductions();   // refresh Balances tab so balance updates immediately
+};
+
+// ── openDelWage ──
+const _origOpenDelWage = openDelWage;
+openDelWage = function(empId, pk) {
+  const emp = employees.find(e => e.id === empId);
+  delAction = async () => {
+    wageEntries = wageEntries.filter(w => !(w.empId===empId && w.periodKey===pk));
+    save();
+    await fsDeleteWage(empId, pk);
+    renderWages(); renderDashboard();
+  };
+  document.getElementById('del-title').textContent = 'Delete Wage Entry?';
+  document.getElementById('del-msg').textContent   = `Remove wage entry for "${emp?.name}" in period "${pk}"?`;
+  document.getElementById('del-modal').style.display = 'flex';
+};
+
+// ── saveDedEntry ──
+const _origSaveDedEntry = saveDedEntry;
+saveDedEntry = async function() {
+  const empId      = document.getElementById('ded-emp-id').value;
+  const type       = document.getElementById('ded-type').value;
+  const date       = document.getElementById('ded-date').value;
+  const particular = document.getElementById('ded-particular').value.trim() || '—';
+  const charge     = parseFloat(document.getElementById('ded-charge').value) || 0;
+  const credit     = parseFloat(document.getElementById('ded-credit').value) || 0;
+  if (!empId)             { alert('Select an employee'); return; }
+  if (!charge && !credit) { alert('Enter a charge or credit amount'); return; }
+  const entry = { id:uid(), empId, type, date, particular, charge, credit };
+  deductionLedger.push(entry);
+  dedOpenCards[empId] = true;
+  save();
+  await fsSaveDedEntry(entry);
+  closeDedModal(); renderDeductions();
+};
+
+// ── saveDedEditEntry ──
+const _origSaveDedEditEntry = saveDedEditEntry;
+saveDedEditEntry = async function() {
+  const charge = parseFloat(document.getElementById('dee-charge').value) || 0;
+  const credit = parseFloat(document.getElementById('dee-credit').value) || 0;
+  if (!charge && !credit) { alert('Enter a charge or credit amount'); return; }
+  const idx = deductionLedger.findIndex(e => e.id === dedEditId);
+  if (idx < 0) return;
+  deductionLedger[idx] = {
+    ...deductionLedger[idx],
+    date:       document.getElementById('dee-date').value,
+    particular: document.getElementById('dee-particular').value.trim() || '—',
+    charge, credit,
+  };
+  save();
+  await fsSaveDedEntry(deductionLedger[idx]);
+  closeDedEditModal(); renderDeductions();
+};
+
+// ── deleteDedEntry ──
+const _origDeleteDedEntry = deleteDedEntry;
+deleteDedEntry = async function(id) {
+  if (!confirm('Delete this entry?')) return;
+  deductionLedger = deductionLedger.filter(r => r.id !== id);
+  save();
+  await fsDeleteDedEntry(id);
+  renderDeductions();
+};
+
+// ── applyDedPrompt ──
+const _origApplyDedPrompt = applyDedPrompt;
+applyDedPrompt = async function() {
+  const pk = currentPeriodKey();
+  let applied = 0;
+  const writes = [];
+  dedPromptData.forEach(d => {
+    if (!d.suggested || d.suggested <= 0) return;
+    const idx = wageEntries.findIndex(w => w.empId===d.empId && w.periodKey===pk);
+    if (idx < 0) return;
+    wageEntries[idx][d.field] = (wageEntries[idx][d.field]||0) + d.suggested;
+    const entry = { id:uid(), empId:d.empId, type:d.type, date:currentPeriodDate,
+      particular:`DEDUCT – ${currentPeriodLabel}`, charge:0, credit:d.suggested };
+    deductionLedger.push(entry);
+    writes.push(fsSaveWage(wageEntries[idx]));
+    writes.push(fsSaveDedEntry(entry));
+    applied++;
+  });
+  save();
+  await Promise.all(writes);
+  closeDedPromptModal(); renderWages(); renderDashboard();
+  if (applied) alert(`✅ ${applied} deduction${applied!==1?'s':''} applied to wage entries.`);
+};
+
+// ── savePeriodToHistory ──
+const _origSavePeriodToHistory = savePeriodToHistory;
+savePeriodToHistory = async function() {
+  const pk  = currentPeriodKey();
+  const act = activeEmps().filter(e => getWage(e.id, pk));
+  if (!act.length) { alert('No wage entries for this period to save.'); return; }
+  const exists = history.find(h => h.periodKey === pk);
+  if (exists && !confirm(`Period "${currentPeriodLabel}" already saved. Overwrite?`)) return;
+  if (exists) {
+    history.splice(history.indexOf(exists), 1);
+    await fsDeleteHistory(pk);
+  }
+  let totE=0,totN=0,totD=0;
+  const rows = act.map(emp => {
+    const w = getWage(emp.id, pk);
+    const c = calcWage(emp, w);
+    totE+=c.earnings; totN+=c.net; totD+=c.deductions;
+    return { name:emp.name, position:emp.position, rate:emp.rate, days:w.days, earnings:c.earnings, deductions:c.deductions, net:c.net };
+  });
+  const snap = { label:currentPeriodLabel, date:currentPeriodDate, periodKey:pk, rows, totals:{earnings:totE,net:totN,deductions:totD} };
+  history.push(snap);
+
+  const FIELD_TO_TYPE = { ssl:'SSL', sscal:'SSCAL', psl:'PSL', pcal:'PCAL', phic:'PHIC', pagibig:'PAGIBIG', sss:'SSS', ca:'CA' };
+  let creditCount = 0;
+  const dedWrites = [];
+  act.forEach(emp => {
+    const w = getWage(emp.id, pk);
+    if (!w) return;
+    Object.entries(FIELD_TO_TYPE).forEach(([field, type]) => {
+      const amount = parseFloat(w[field]) || 0;
+      if (amount <= 0) return;
+      const alreadyPosted = deductionLedger.some(r =>
+        r.empId === emp.id && r.type === type &&
+        r.particular === `DEDUCT – ${currentPeriodLabel}` && r.credit === amount);
+      if (alreadyPosted) return;
+      const entry = { id:uid(), empId:emp.id, type, date:currentPeriodDate,
+        particular:`DEDUCT – ${currentPeriodLabel}`, charge:0, credit:amount };
+      deductionLedger.push(entry);
+      dedWrites.push(fsSaveDedEntry(entry));
+      creditCount++;
+    });
+  });
+
+  save();
+  await Promise.all([fsSaveHistory(snap), ...dedWrites]);
+  renderReports(); renderDeductions(); renderWages(); renderDashboard(); renderPayslips();
+  const creditNote = creditCount > 0 ? `\n${creditCount} deduction${creditCount!==1?'s':''} credited to balances.` : '';
+  alert(`✓ Saved "${currentPeriodLabel}" to history.${creditNote}`);
+};
+
+// ── savePeriod (period label/date) ──
+const _origSavePeriod = savePeriod;
+savePeriod = async function() {
+  const v = document.getElementById('pm-label').value.trim();
+  const d = document.getElementById('pm-date').value;
+  if (v) currentPeriodLabel = v;
+  if (d) currentPeriodDate  = d;
+  wageDetailOpen = {};
+  save();
+  await fsSavePeriodMeta();
+  closePeriodModal(); renderDashboard(); setPeriodChip();
+};
+
+// ── saveBranch ──
+const _origSaveBranch = saveBranch;
+saveBranch = async function() {
+  const name = document.getElementById('bm-name').value.trim();
+  if (!name) { alert('Enter a branch name'); return; }
+  const addr = document.getElementById('bm-addr').value.trim();
+  if (branchEditId) {
+    const idx = branches.findIndex(b => b.id === branchEditId);
+    if (idx >= 0) branches[idx] = { ...branches[idx], name, addr };
+    saveBranches();
+    await fsSaveBranches();
+    closeBranchModal(); renderBranchBar(); renderAll();
+  } else {
+    const newId = 'b' + Date.now().toString(36);
+    branches.push({ id: newId, name, addr });
+    saveBranches();
+    await fsSaveBranches();
+    closeBranchModal(); renderBranchBar();
+    switchBranch(newId);
+  }
+};
+
+// ── deleteBranch ──
+const _origDeleteBranch = deleteBranch;
+deleteBranch = async function() {
+  if (!branchEditId) return;
+  const b = branches.find(x => x.id === branchEditId);
+  if (!confirm(`Delete branch "${b?.name}"?\nThis will permanently erase all its employees, wages, and history.`)) return;
+  ['employees','wages','period','period_date'].forEach(k => localStorage.removeItem(`31b_v2_${k}_${branchEditId}`));
+  branches = branches.filter(x => x.id !== branchEditId);
+  saveBranches();
+  await fsSaveBranches();
+  closeBranchModal(); renderBranchBar();
+  switchBranch(branches[0].id);
+};
+
+// ── delHistoryEntry ──
+const _origDelHistoryEntry = delHistoryEntry;
+delHistoryEntry = async function(gi) {
+  const sorted = [...history].sort((a,b) => {
+    const da=new Date(a.date||'1970'), db=new Date(b.date||'1970');
+    return sortDir==='newest' ? db-da : da-db;
+  });
+  const h = sorted[gi];
+  if (!confirm(`Delete report for "${h.label}"?`)) return;
+  history = history.filter(x => x.periodKey !== h.periodKey);
+  save();
+  await fsDeleteHistory(h.periodKey);
+  renderReports();
+};
+
+// ── applyBioImport ──
+const _origApplyBioImport = applyBioImport;
+applyBioImport = async function() {
+  const pk = currentPeriodKey();
+  let applied = 0, skipped = 0;
+  const writes = [];
+  for (const b of bioParsed) {
+    if (!b.matchedEmpId) { skipped++; continue; }
+    const emp = employees.find(e => e.id === b.matchedEmpId);
+    if (!emp) { skipped++; continue; }
+    const otAmt = Math.round((emp.rate / 8) * 1.25 * (b.otMins / 60) * 100) / 100;
+    const utAmt = Math.round((emp.rate / 8) * (b.utMins / 60) * 100) / 100;
+    const existing = getWage(b.matchedEmpId, pk);
+    const entry = {
+      empId: b.matchedEmpId, periodKey: pk,
+      days: b.days, otMins: b.otMins, otAmt,
+      holiday: existing?.holiday || 0,
+      utMins: b.utMins, utAmt,
+      pagibig: existing?.pagibig || 0, phic: existing?.phic || 0,
+      sss: existing?.sss || 0, ca: existing?.ca || 0,
+      ssl: existing?.ssl || 0, sscal: existing?.sscal || 0,
+      psl: existing?.psl || 0, pcal: existing?.pcal || 0,
+    };
+    const idx = wageEntries.findIndex(w => w.empId === b.matchedEmpId && w.periodKey === pk);
+    if (idx >= 0) wageEntries[idx] = entry; else wageEntries.push(entry);
+    writes.push(fsSaveWage(entry));
+    applied++;
+  }
+  save();
+  await Promise.all(writes);
+  closeBioBanner(); renderWages(); renderDashboard();
+  const matchedIds = bioParsed.filter(b => b.matchedEmpId).map(b => b.matchedEmpId);
+  if (buildDedPrompt(matchedIds)) {
+    setTimeout(() => showDedPromptModal(), 400);
+  } else {
+    alert(`✅ Import complete! ${applied} employee${applied !== 1 ? 's' : ''} updated · ${skipped} skipped`);
+  }
+};
+
+// ═══════════════════════════════════════════════
+// TEST / LIVE MODE + TAB ACCESS CONTROL
+// ═══════════════════════════════════════════════
+
+// All 6 tabs and whether staff can see them by default
+const ALL_TABS = [
+  { id: 'dashboard',  label: 'Dashboard',  defaultOn: true  },
+  { id: 'wages',      label: 'Wages',      defaultOn: true  },
+  { id: 'payslips',   label: 'Payslips',   defaultOn: true  },
+  { id: 'directory',  label: 'Directory',  defaultOn: false },
+  { id: 'deductions', label: 'Balances',   defaultOn: false },
+  { id: 'reports',    label: 'Reports',    defaultOn: false },
+];
+
+// App-wide settings stored in Firestore /settings/appConfig
+let appMode       = 'live';  // 'test' | 'live'
+let staffTabPerms = {};      // { dashboard: true, wages: true, ... }
+
+// Initialize defaults
+ALL_TABS.forEach(t => { staffTabPerms[t.id] = t.defaultOn; });
+
+// ── Load settings from Firestore ──
+async function loadAppSettings() {
+  try {
+    const snap = await db.collection('settings').doc('appConfig').get();
+    if (snap.exists) {
+      const d = snap.data();
+      if (d.appMode)       appMode       = d.appMode;
+      if (d.staffTabPerms) staffTabPerms = { ...staffTabPerms, ...d.staffTabPerms };
+    }
+  } catch(e) { /* use defaults */ }
+  applyAppMode();
+  applyTabAccess();
+}
+
+// ── Save settings to Firestore ──
+async function saveAppSettings() {
+  try {
+    await db.collection('settings').doc('appConfig').set({ appMode, staffTabPerms }, { merge: true });
+  } catch(e) { console.warn('Could not save settings:', e); }
+}
+
+// ── Switch mode ──
+function setAppMode(mode) {
+  appMode = mode;
+  applyAppMode();
+  saveAppSettings();
+  // Re-render mode toggle buttons
+  const btnTest = document.getElementById('mode-btn-test');
+  const btnLive = document.getElementById('mode-btn-live');
+  if (btnTest && btnLive) {
+    btnTest.className = 'mode-seg-btn' + (mode === 'test' ? ' active-test' : '');
+    btnLive.className = 'mode-seg-btn' + (mode === 'live' ? ' active-live' : '');
+  }
+  const label = document.getElementById('um-mode-label');
+  const sub   = document.getElementById('um-mode-sub');
+  if (label) label.textContent = mode === 'test' ? '🧪 Test Mode' : '⚡ Live Mode';
+  if (sub)   sub.textContent   = mode === 'test'
+    ? 'Data is isolated — changes won\'t affect live records'
+    : 'Saving to production database';
+}
+
+// ── Apply mode visuals ──
+function applyAppMode() {
+  const banner = document.getElementById('mode-banner');
+  const icon   = document.getElementById('mode-banner-icon');
+  const text   = document.getElementById('mode-banner-text');
+  document.body.classList.toggle('test-mode', appMode === 'test');
+  document.body.classList.toggle('live-mode', appMode === 'live');
+  if (!banner) return;
+  if (appMode === 'test') {
+    banner.style.display = 'flex';
+    banner.className     = '';
+    if (icon) icon.textContent = '🧪';
+    if (text) text.textContent = 'TEST MODE — Data is isolated. Changes will NOT affect live records.';
+    const bt = document.getElementById('mode-btn-test');
+    const bl = document.getElementById('mode-btn-live');
+    if (bt) { bt.className = 'mode-seg-btn active-test'; }
+    if (bl) { bl.className = 'mode-seg-btn'; }
+  } else {
+    banner.style.display = 'none';
+    banner.className     = 'live-mode';
+    const bt = document.getElementById('mode-btn-test');
+    const bl = document.getElementById('mode-btn-live');
+    if (bt) { bt.className = 'mode-seg-btn'; }
+    if (bl) { bl.className = 'mode-seg-btn active-live'; }
+  }
+}
+
+// ── Override branchCol so test mode uses a separate Firestore prefix ──
+const _origBranchCol = branchCol;
+branchCol = function(collection) {
+  if (appMode === 'test') {
+    const bid = currentBranch?.id || 'main';
+    return db.collection('TEST_' + bid + '_' + collection);
+  }
+  return _origBranchCol(collection);
+};
+
+// ── Apply tab access for staff ──
+function applyTabAccess() {
+  if (currentUserRole === 'admin') return; // admins always see everything
+  const navTabs = document.querySelectorAll('.nav-tab');
+  navTabs.forEach(tab => {
+    // Find which tab this is by its onclick attribute
+    const match = tab.getAttribute('onclick')?.match(/switchTab\('(\w+)'/);
+    if (!match) return;
+    const tabId = match[1];
+    const allowed = staffTabPerms[tabId] !== false; // default true if not set
+    tab.style.display = allowed ? '' : 'none';
+  });
+  // If current active tab was hidden, switch to dashboard
+  const activeTab = document.querySelector('.nav-tab.active');
+  if (activeTab && activeTab.style.display === 'none') {
+    const dashTab = document.querySelector('.nav-tab[onclick*="dashboard"]');
+    if (dashTab) switchTab('dashboard', dashTab);
+  }
+}
+
+// ── Render tab access grid in user menu ──
+function renderTabAccessGrid() {
+  const grid = document.getElementById('tab-access-grid');
+  if (!grid) return;
+  grid.innerHTML = ALL_TABS.map(t => `
+    <div class="tab-access-item">
+      <span class="tab-access-name">${t.label}</span>
+      <label class="tog">
+        <input type="checkbox" ${staffTabPerms[t.id] ? 'checked' : ''}
+          onchange="toggleTabPerm('${t.id}', this.checked)" />
+        <span class="tog-sl"></span>
+      </label>
+    </div>
+  `).join('');
+}
+
+function toggleTabPerm(tabId, enabled) {
+  staffTabPerms[tabId] = enabled;
+  saveAppSettings();
+  // Broadcast to all connected staff sessions via Firestore listener
+}
+
+// ═══════════════════════════════════════════════
+// STAFF PERMISSION GUARD
+// ═══════════════════════════════════════════════
+function applyRoleUI() {
+  if (currentUserRole === 'staff') {
+    // Staff can add/edit wages only — hide directory edit, balances add, branch mgmt, delete buttons
+    document.querySelectorAll('.admin-only').forEach(el => { el.style.display = 'none'; });
+    // hide period chip for staff
+    const pc = document.querySelector('.period-chip');
+    if (pc) pc.style.display = 'none';
+  }
+}
+
+// ── INIT ──
+// onAuthStateChanged drives startup; show loading until resolved
+const _initLoading = document.getElementById('app-loading');
+const _initShell   = document.getElementById('app-shell');
+if (_initLoading) _initLoading.style.display = 'flex';
+if (_initShell)   _initShell.style.display   = 'none';
+</script>
+<!-- ══════════════ MODAL: BIO DATE RANGE ══════════════ -->
+<div class="modal-overlay" id="bio-date-modal" style="display:none" onclick="if(event.target===this)closeDateModal()">
+  <div class="modal" style="max-height:60vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Select Date Range</div>
+    <div class="modal-sub" id="bio-file-range">File covers: —</div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:16px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Only include attendance from:</div>
+      <div class="fg2">
+        <div class="fg">
+          <label class="fl">From date</label>
+          <select class="fi" id="bio-date-from-sel"></select>
+        </div>
+        <div class="fg">
+          <label class="fl">To date</label>
+          <select class="fi" id="bio-date-to-sel"></select>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">Days worked, OT, and undertime will be recalculated using only the selected dates.</div>
+    </div>
+
+    <button class="btn-full" onclick="applyDateRange()">Apply & Review Matches →</button>
+    <button class="btn-cancel" onclick="closeDateModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: ADD BALANCE TO WAGE ENTRY ══════════════ -->
+<div class="modal-overlay" id="add-bal-modal" style="display:none" onclick="if(event.target===this)closeAddBalModal()">
+  <div class="modal" style="max-height:56vh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="width:38px;height:38px;border-radius:10px;background:rgba(245,197,24,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💳</div>
+      <div>
+        <div class="modal-title" id="add-bal-title" style="margin-bottom:1px;font-size:16px">Deduction</div>
+        <div id="add-bal-empname" style="font-size:11px;color:var(--muted)"></div>
+      </div>
+    </div>
+
+    <div style="background:rgba(240,82,82,.07);border:1px solid rgba(240,82,82,.2);border-radius:10px;padding:11px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--muted)">Outstanding Balance</span>
+      <span id="add-bal-balance" style="font-family:var(--fh);font-weight:800;font-size:17px;color:var(--red)">₱0.00</span>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Amount to Deduct This Period (₱)</label>
+      <input class="fi" id="add-bal-amount" type="number" min="0" placeholder="0.00"
+        style="font-size:22px;font-weight:700;text-align:center;letter-spacing:.02em" />
+      <div style="font-size:10px;color:var(--muted);margin-top:5px;text-align:center">You can deduct less than the full balance</div>
+    </div>
+
+    <button class="btn-full" onclick="confirmAddBalance()">✓ Add to Wage Entry</button>
+    <button class="btn-cancel" onclick="closeAddBalModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: BRANCH ══════════════ -->
+<div class="modal-overlay" id="branch-modal" style="display:none" onclick="if(event.target===this)closeBranchModal()">
+  <div class="modal" style="max-height:70vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="branch-modal-title">Add Branch</div>
+    <div class="modal-sub" id="branch-modal-sub">Each branch has its own employees, wages, and history</div>
+    <div class="fg"><label class="fl">Branch Name</label><input class="fi" id="bm-name" placeholder="e.g. Branch 2, Tagum South, Maco Site" /></div>
+    <div class="fg"><label class="fl">Address / Description (optional)</label><input class="fi" id="bm-addr" placeholder="e.g. Maco, Compostela Valley" /></div>
+    <div id="bm-delete-wrap" style="display:none;margin-top:4px">
+      <button class="btn-full btn-full-red" style="margin-top:0;font-size:13px" onclick="deleteBranch()">🗑 Delete This Branch</button>
+      <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:6px">Deletes all employees, wages & history for this branch</div>
+    </div>
+    <button class="btn-full" id="bm-save-btn" onclick="saveBranch()">Save Branch</button>
+    <button class="btn-cancel" onclick="closeBranchModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: USER MENU ══════════════ -->
+<div class="modal-overlay" id="user-menu-modal" style="display:none" onclick="if(event.target===this)closeUserMenu()">
+  <div class="modal" style="max-height:60vh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div style="width:44px;height:44px;border-radius:50%;background:rgba(245,197,24,.15);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:16px;color:var(--gold)" id="um-avatar">—</div>
+      <div>
+        <div style="font-family:var(--fh);font-weight:700;font-size:15px" id="um-name">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="um-email">—</div>
+        <div style="margin-top:4px"><span class="pos-badge pill-active" id="um-role" style="font-size:9px">—</span></div>
+      </div>
+    </div>
+    <button class="admin-only btn-full" style="background:rgba(61,126,255,.15);color:var(--blue);margin-top:0;font-size:13px" onclick="closeUserMenu();openUserMgmt()">👥 Manage Users</button>
+
+    <!-- Mode toggle (admin only) -->
+    <div class="admin-only mode-toggle-wrap" style="margin-top:10px">
+      <div>
+        <div class="mode-toggle-label" id="um-mode-label">⚡ Live Mode</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px" id="um-mode-sub">Saving to production database</div>
+      </div>
+      <div class="mode-seg">
+        <button class="mode-seg-btn" id="mode-btn-test" onclick="setAppMode('test')">🧪 Test</button>
+        <button class="mode-seg-btn active-live" id="mode-btn-live" onclick="setAppMode('live')">⚡ Live</button>
+      </div>
+    </div>
+
+    <!-- Tab access control (admin only) -->
+    <div class="admin-only" style="margin-top:10px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--fh);font-weight:700;margin-bottom:8px">Staff Tab Access</div>
+      <div class="tab-access-grid" id="tab-access-grid">
+        <!-- rendered by renderTabAccessGrid() -->
+      </div>
+      <div style="font-size:9px;color:var(--muted);margin-top:7px;text-align:center">Admins always see all tabs</div>
+    </div>
+
+    <button class="btn-full btn-full-red" style="font-size:13px;margin-top:10px" onclick="doLogout()">Sign Out</button>
+    <button class="btn-cancel" onclick="closeUserMenu()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: USER MANAGEMENT (admin only) ══════════════ -->
+<div class="modal-overlay" id="user-mgmt-modal" style="display:none" onclick="if(event.target===this)closeUserMgmt()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div>
+        <div class="modal-title" style="margin-bottom:2px">User Management</div>
+        <div style="font-size:11px;color:var(--muted)">Create and manage app accounts</div>
+      </div>
+    </div>
+    <!-- Existing users list -->
+    <div id="user-mgmt-list" style="margin-bottom:16px"></div>
+    <!-- Create new user -->
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-family:var(--fh);font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Create New User</div>
+      <div class="fg"><label class="fl">Display Name</label><input class="fi" id="nu-name" placeholder="e.g. Maria Santos" /></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="nu-email" type="email" placeholder="staff@email.com" /></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="nu-pass" type="password" placeholder="min. 6 characters" /></div>
+      <div class="fg"><label class="fl">Role</label>
+        <select class="fi" id="nu-role">
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div id="nu-err" style="display:none;background:rgba(240,82,82,.1);border:1px solid rgba(240,82,82,.3);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--red);margin-bottom:12px"></div>
+      <button class="btn-full" id="nu-btn" onclick="createUser()" style="margin-top:4px">Create User</button>
+    </div>
+    <button class="btn-cancel" onclick="closeUserMgmt()">Close</button>
+  </div>
+</div>
+
+</div><!-- /#app-shell -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>
